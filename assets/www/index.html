@@ -1,0 +1,2570 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <!--  <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />-->
+        <link rel="stylesheet" type="text/css" href="css/jquery.mobile-1.4.3.min.css" />
+        <!-- <link rel="stylesheet" href="//code.jquery.com/ui/1.11.1/themes/smoothness/jquery-ui.css"> -->
+      	<script type="text/javascript" src="js/jquery.js"></script> 
+      	<script src="//code.jquery.com/ui/1.11.1/jquery-ui.js"></script>
+		<script type="text/javascript" src="js/jquery.mobile-1.4.3.js"></script>
+		<!-- <script type="text/javascript" src="js/jquery-ui.js"></script> -->
+		<!--<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css">-->
+		<!--<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>-->
+		<!--<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>-->
+        <script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+        <script type="text/javascript" src="js/Calllogs.js"></script>
+        <!-- <script type="text/javascript" src="webintents.js"></script> -->
+        <style type="text/css">
+       /** #spinnerdialog {
+					background:url(http://loadinggif.com/images/image-selection/36.gif) no-repeat center center;
+					opacity: 0.4;
+					background-color: black;
+					height: 100%;
+					width: 100%;
+					position: fixed;
+					left: 50%;
+					top: 50%;L284
+					margin: -50px 0 0 -50px;
+					z-index: 1000;
+					}
+					
+				
+					
+					.ui-loader-background {
+							    width:100%;
+							    height:100%;
+							    top:0;
+							    margin: 0;
+							    background: rgba(0, 0, 0, 0.3);
+							    display:none;
+							    position: fixed;
+							    z-index:100;
+						}
+
+					.ui-loading .ui-loader-background {
+    							display:block;
+						}**/	
+						
+					
+					.list {
+					    background-color: black;
+					    color: #fff;
+					    font-size: 30px;
+					    text-align: center;
+					    cursor: pointer;
+					    font-family: Geneva,Arial,Helvetica,sans-serif;
+					    border: 1px solid gray;
+					    margin: 2px;
+					    padding: 2px;
+					    
+					}
+					 
+					#diallist .ui-selected {
+					    background: red;
+					    color: white;
+					    font-weight: bold;
+					}
+					 
+				 .ui-selecting { background: #FECA40; }
+					 
+					#items {
+					    list-style-type: none;
+					    margin: 0;
+					    padding: 0;
+					    box-sizing: border-box;
+					}
+					 
+				#items li {
+					    float: left;
+					    margin: 2px;
+					    padding: 2px;
+					    width: 60px;
+					    height: 60px;
+					    line-height: 60px;
+					}		
+					
+							
+          </style>
+        
+        <script type="text/javascript"charset="utf-8"  >
+        
+     /********************************  This to show spinner   *******************************************/   
+		$(document).on('pagebeforecreate', '[data-role="page"]', function(){   // instead of .on event if we use .one the the following code will ron only one time
+            	setTimeout(function(){
+                	//$.mobile.loading('show');
+                	$.mobile.loading('show', {theme:"a", text:"Please wait...", textonly:false, textVisible: true});
+            	},0);    
+        });
+
+        $(document).on('pageshow', '[data-role="page"]', function(){  
+            	setTimeout(function(){
+            		var ThisPage = $(':mobile-pagecontainer').pagecontainer('getActivePage').attr('id');
+            		console.log("Now showing" + ThisPage);
+            		if(ThisPage == "pageone"){ // this condition is add so that the loading dialog dosent get higdden if it is the frist page
+            			console.log("Page one show")
+            		}
+            		else{
+                	$.mobile.loading('hide');
+            		}
+            	},300);      
+        });
+        
+        /*******************************************************************************************************************************/
+        
+        
+       /************************************************************** JQUERY AJAX SETUP ******************/ 
+        jQuery.ajaxSetup({
+        	  beforeSend: function() {
+        	      //$.mobile.loading('show');
+        	      console.log("Ajax before sending"); 
+        		 $.mobile.loading('show', {theme:"a", text:"Loading...", textonly:false, textVisible: true});
+        	  },
+        	  complete: function(){
+        		  console.log("Ajax complete");
+        	     $.mobile.loading('hide');
+        	  },
+        	  error: function(){
+        		  console.log("Ajax error");
+        	  	 $.mobile.loading('hide');
+        	  },
+        	  timeout: 20000,    	  
+        	});
+        
+        /*******************************************************************************************************************************/
+        
+        
+        
+        
+        /*************************** First Pageone Device Ready  Event *************************/
+        $(document).ready(function(){
+        	//alert('onDevice ready');
+        	
+        	console.log("Javascript start");
+        	
+        	var db = window.openDatabase("html5.db", "1.0", "PhoneGap Demo", 1000000);
+        	var autocompletenumber = new Array();
+        	
+        	console.log("onDevice ready");
+        	var datastatus;
+        	
+        	function checkConnection() {
+                var networkState = navigator.connection.type;
+                console.log("Inside check connection");
+                var states = {};
+                states[Connection.UNKNOWN]  = '0';
+                states[Connection.NONE]     = '1';
+                states[Connection.CELL_2G]  = '2';
+                states[Connection.CELL_3G]  = '3';
+                states[Connection.CELL_4G]  = '4';
+                states[Connection.ETHERNET] = '6';
+                states[Connection.WIFI]     = '5';
+                
+               return states[networkState];
+            }
+        	
+			document.addEventListener("deviceready", onDeviceReady, false);
+            
+            function onDeviceReady() {
+            	console.log("Inside first onDevice ready");
+            var datastatus = checkConnection();
+           	
+           	
+           	if (typeof(Storage) == "undefined" ) {
+                   //alert("Your browser does not support HTML5 localStorage. Try upgrading.");
+           		console.log("Your browser does not support HTML5 localStorage. Try upgrading.");
+           	}
+           	else {
+           		//alert("Browser support Html5");
+               	console.log("Both localStorage and sessionStorage support is there.");
+           	}
+           	
+           	//alert('Page one create event');
+        	console.log('Page one create event');
+           	var userid = localStorage.getItem("userid");
+           	var password = localStorage.getItem("passwd"); 
+           	var domainname = localStorage.getItem("domainname");
+   		    if(userid == null || password == null || domainname == null){
+   		  	    console.log("Sending ajax request with user entered details");
+   			    alert("Unable to get user details...\n please Login");
+   			    $.mobile.changePage($("#pageLogin"), { transition : "slide"});  // login check continue at line 114
+   		    } else { //login check if user is not first time loged
+   		    		if(datastatus == "0" || datastatus == "1"){
+   		    			
+   		    			setTimeout(function(){
+   		    			// below code is to hide the loging dialog and quit the app
+   		    				$.mobile.loading('hide');
+   		    				alert("No Data Network found");
+   		    				
+   		    				if(navigator.app){
+		        	            	navigator.app.exitApp();
+		        	    		}else if(navigator.device){
+		        	            	navigator.device.exitApp();
+		        	    		}
+   		    				
+   		    			},2000);
+   		    		
+   		    			
+   		    		} else {
+   		    		   	console.log("Sending ajax request with web storage details");
+   		        	  
+   		        		 $.ajax({
+   		                     type: "GET",
+   		                     url: "http://mail.tsim.in/webcall.php",
+   		                     //data: {action: 'login',domains: 'tsim.in',web_storage: 'Yes',user_id: userid,passwd: password},
+   		                     data: {action: 'login',domains: domainname,web_storage: 'Yes',user_id: userid,passwd: password},
+   		                     cache: false,
+   		                     dataType: "json",
+   		                     success: onSuccess,
+   		                     error: onError
+   		                   });
+   		        	
+   		              		function onError()
+   		        		 	{
+   		        			 	alert("Unable to connect to server");
+   		        			 	// below code is to exit application when unable to connect for frist time
+   		        			 	if(navigator.app){
+   		        	            	navigator.app.exitApp();
+   		        	    		}else if(navigator.device){
+   		        	            	navigator.device.exitApp();
+   		        	    		}
+   		        		 	}
+   			        	
+   		              		function onSuccess(data)
+   		                 	{
+    		        			
+								console.log('In page one success');   		                 	
+   		        			 	console.log(data.code);
+           	  
+             	  				var resp_code = data.code;
+   		                 		if(resp_code == '0')
+   		                  		  {
+   		                  	  		alert("Unable to connect to database");
+   		                  		  }
+   		                  	  	else if( resp_code == '1')
+   		                  		  {
+   		                  		  	alert("Login details not received");
+   		                  		  }
+   		                  	  	else if(resp_code == '2')
+   		                  		  {
+   		                  		  	alert("Wrong username or password");
+   		                  		  
+   		                  		  }
+   		                  	  	else if(resp_code == '3')
+   		                  		  {
+   		                  		  	alert("No register number found");
+   		                  		  }
+   		                  	  	else if(resp_code == '4')
+   		                  		  {
+   		                  		  	//alert("register number details found");
+   		                  		  		console.log("register number details found");
+   		                  		  	
+   			                        	if (data.credit == null || data.credit == '0')
+   			                        		localStorage.setItem("credit_details", "0.0");
+   			                        	else{
+   			                        		var credit = data.credit;
+   			                           		localStorage.setItem("credit_details",parseFloat(credit).toFixed(2)); /// print roundoff to 2 decimal
+   			                           		console.log("fixed credit" + parseFloat(credit).toFixed(2));
+   			                        		//localStorage.setItem("credit_details",credit);
+   			                        	}
+   			                        	$.mobile.changePage($("#pageContactList"), { transition : "slide"});
+   			                        	
+   			                     			                        	
+   			                         	var database_created = localStorage.getItem("database_created");
+   			                      		var database_populated = localStorage.getItem("database_populated");
+   			                      		
+   			                      		console.log("Value of database_created is " + database_created);
+   			                      		console.log("Value of database_populated is " + database_populated);
+   			                      		if(database_created == "1" && database_populated == "1"){
+   			                      		//var db = window.openDatabase("html5.db", "1.0", "PhoneGap Demo", 1000000);//this is declare in ondocument ready
+   			                      		//db.transaction(populateCB, errorCB, successCB); 
+   			         					//db.transaction(populateCB, successCB, errorCB);
+   			         					db.transaction(getCB,errorCB);
+   			                      		   			                      		
+   			                      		function getCB(tx){
+   			                      			//tx.executeSql('select * from CONTACTS', [], errorCB, retriveContact);
+   			                      			console.log("Inside getCb");
+   			                      			tx.executeSql('select * from CONTACTS', [], retriveContact,	retriveErrorCB);
+   			                      		}
+   			                      		
+   			                      			function retriveContact(tx,results){
+   			                                   		console.log("Retriving contact from database");	
+										        	dbResult = results;
+										        	var len= results.rows.length;
+										        	var htmlstring="";
+										
+										        	for(var i=0;i<len;i++)
+										        	{
+										        	    //htmlstring = sessionList+"<li>"+results.rows.item(i).date+"</li>"
+										        	    
+										        	    var li = $("<li>");
+							        	            	var licls = $("</li>");
+							        	            	var a = $("<a>");
+							        	            	var acls = $("</a>");
+							        	            	a.attr("id", results.rows.item(i).phoneNumber).text(results.rows.item(i).name);
+							        	            	a.attr("href", results.rows.item(i).phoneNumber);
+							        	            	$("#contactlist").append(li)
+							        	            	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+							        	            	li.append(acls);
+							        	            	$("#contactlist").append(licls); //this didnt work
+							        	            	$("#contactlist").listview('refresh');
+										        	    
+										        	}
+   			                      			}
+   			                      			
+   			                      		function errorCB(err) {
+	   			                             alert("Error processing SQL: "+err);
+	   			                             
+   			                         	}
+   			                      		function retriveErrorCB(err){
+   			                      			alert("Error Retiving SQl :" + err);
+   			                      		}
+   			                         // Transaction success callback
+   			                         //	
+   			                      		}else {
+   											
+   			                      			//alert("Retriving Contact from mobile");
+   			                      			console.log("Retriving Contact from mobile");
+	   			                      		var options = new ContactFindOptions();
+	   			                         	options.filter="";          // empty search string returns all contacts
+	   			                         	options.multiple=true;      // return multiple results
+	   			                         	var filter = ["displayName" , "name" , "phoneNumbers"];   // return contact.displayName field
+	   			                            
+	   			                         	// below line is use to find contacts
+      			                        	 navigator.contacts.find(filter, onContactSuccess, onContactError, options);
+   			                      		
+   			                      		}
+   			                        	
+   		                  		  }
+   		                  	  else {
+   		                   		$.mobile.changePage($("#pageone"), { transition : "slide"});
+   		                  	  }
+   		                 	}// onsucess close
+   		                 
+   		    			}// else closing for  network status
+    		        }// else closing for login check if  user is not first time visitor
+   		                  
+            }// onDeviceReady close
+
+            // onSuccess: Get a snapshot of the current contacts
+            //
+            function onContactSuccess(contacts) {
+            	
+            	var contactstest = contacts;
+            	$("#contactlist").empty();     
+            	db.transaction(populateDB, errorCB, successCB);
+					
+                 function populateDB(tx) {
+                     tx.executeSql('DROP TABLE IF EXISTS CONTACTS');
+                     tx.executeSql('CREATE TABLE IF NOT EXISTS CONTACTS (id unique, name, phoneNumber)');
+                     console.log("Inside populateDB ");
+                     //db.transaction(getCB, errorCB);
+                }
+
+                 function errorCB(err) {
+                     alert("Error processing SQL: " + err);
+                     localStorage.setItem("database_created", "0"); 
+                 }
+
+                 // Transaction success callback
+                 //
+                 function successCB() {
+                     //alert("success!");
+                     
+                     localStorage.setItem("database_created", "1"); 
+                     console.log("database created");
+                 }
+                 
+                 var database_created = localStorage.getItem("database_created");
+                 var database_populated = localStorage.getItem("database_populated");
+                 if(database_created == "1" && (database_populated === null || database_populated == '0')){
+                	//if(database_created == "1"){
+                	 console.log("Populating Database with contacts");
+                 	 console.log("contacts length" + contacts.length);
+                        
+			               	 	for (var i in contacts) {
+			               	 		
+			               	 	    //if(contacts[i].phoneNumbers === null ) continue; 
+			               	 		if(contacts[i].phoneNumbers != null)
+				        			{   
+			               	 			
+			               	 			//below code is to re insert the updated list
+				               	 		var name = contacts[i].displayName;
+				               	 		var phonenumber = contacts[i].phoneNumbers[0].value;
+				               	 		console.log("Name" + name);
+				               	 		console.log("Phonenumber" + phonenumber);
+				               	 		contactInsert(name,phonenumber);
+				               	 		//alert(name);
+				               	 		//alert(phonenumber);
+				               	 		//var INSERTSQL = 'INSERT INTO CONTACTS (id, name, phoneNumber) VALUES ("' + i +  '", "' +  name + '", "' + phonenumber + '")';
+				               			//console.log("Insert Sql " + INSERTSQL);
+				               			//db.transaction( function(tx){ tx.executeSql('INSERT INTO CONTACTS (name, phoneNumber) VALUES ("' +  name + '", "' + phonenumber + '")' )}, insertErrorCB, insertSuccessCB); //this didnt work so Contact insert function created  
+				               	 	
+				        			}              	 	
+			               	 		
+			               	 	}
+               	 	 
+		               	 		function contactInsert(name,phonenumber){
+			               	 		//alert(name);
+			               	 		//alert(phonenumber);
+			               	 		db.transaction( function(tx){ tx.executeSql('INSERT INTO CONTACTS (name, phoneNumber) VALUES ("' +  name + '", "' + phonenumber + '")' )}, insertErrorCB, insertSuccessCB);  
+		               	 		}
+
+               					function insertSuccessCB(err){
+	               			     	console.log("Insert statement successful");
+	               			     	//alert("In Insert success");
+	               			  	 	localStorage.setItem("database_populated", "1"); 
+	               		        }
+    							function insertErrorCB(err){
+    	               			     	console.log("Insert statement failed");
+    	               			     	//alert("In Insert fail");
+    	               			  		localStorage.setItem("database_populated", "0");
+    	               		     }
+               
+				
+            	}// database created check close 
+				
+				 
+            	 for (var i=0; i<=contacts.length; i++) {
+                  	                  	
+                  	if(contacts[i].phoneNumbers != null)  // Checking if not null
+        				{            	
+                  			//below line is to add number to autocomplete
+                  			//autocompletenumber[i] = contacts[i].phoneNumbers[0].value;
+                  		
+                  			var li = $("<li>");
+        	            	var licls = $("</li>");
+        	            	var a = $("<a>");
+        	            	var acls = $("</a>");
+        	            	a.attr("id", contacts[i].phoneNumbers[0].value).text(contacts[i].displayName);
+        	            	a.attr("href", contacts[i].phoneNumbers[0].value);
+        	            	$("#contactlist").append(li)
+        	            	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+        	            	li.append(acls);
+        	            	$("#contactlist").append(licls); //this didnt work
+        	            	$("#contactlist").listview('refresh');
+        	            	//localStorage.setItem("autocompletenumberlist",JSON.stringify(autocompletenumber));
+        				}
+                      }
+            	
+              };
+
+            // onError: Failed to get the contacts
+            //
+            function onContactError(contactError) {
+                alert('Error in getting contacts!');
+            }
+                     
+            // below function is called when the contact in the contactlist is clicked
+            $("#contactlistdiv").on("click", 'a' , function(event){
+           	 	//alert("Contact Selected");
+           	 event.preventDefault();//this is compulsory for listening dynamically created elements
+           	 var datastatus = checkConnection();
+           	 
+           	 if(datastatus == "0" || datastatus == "1"){
+  				alert("No Data Network found");
+ 				
+ 			} else {
+           	 	//var hrefvalue  = $(this).href; this is not working
+	          		var userid = localStorage.getItem("userid");
+	           		var callerid = localStorage.getItem("caller_id");
+	           		var domainname = localStorage.getItem("domainname");
+	        		var destnum = $(this).attr('href').match(/([0-9])/g).join(''); // the match function extracts number put it in an array
+	        		console.log("contactlist Div:userid " + userid);
+	        		console.log("contactlist Div:callerid " + callerid);
+	        		console.log("contactlist Div:destnum " + destnum);	
+        	     	//alert("contactlist Div:destnum " + destnum);
+        	     	//alert("contactlist Div:callerid " + callerid);
+        	     	//alert("contactlist Div:userid " + userid);
+	        		var recently_dialed_array = [];
+        			var recently_dialed_array = JSON.parse(localStorage.getItem("recently_dialed_array"));
+        		if(recently_dialed_array === null){
+        			var recently_dialed_array = [];
+        			recently_dialed_array.push(destnum);
+        			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+              	} else {
+              		if(recently_dialed_array.length > 10){
+              			recently_dialed_array.shift(); //this removes the  frist element
+              			recently_dialed_array.push(destnum);
+              			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+              		} else { //if recently dialed size has not reached the limit 
+              			recently_dialed_array.push(destnum);
+              			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+              		}
+              	}
+        		
+           	   	        		          		
+        	   		//if((userid.length > 0 && userid != null ) && (callerid.length > 0 && callerid != null) && (destnum.length > 0 && destnum != null)){
+        			//if(!userid && !callerid && !destnum) {
+        			if(!(userid === null) && !(callerid === null) && !(destnum === null ) && !(destnum === null )){
+        			//alert("Condition Successful");
+        	   		$.ajax({
+        	            type: "GET",
+        	            url: "http://mail.tsim.in/webcall.php",
+        	            //data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+        	           	data: {action: 'call',domains: domainname,user_id: userid,caller_id: callerid,dest_num: destnum},
+        	            cache: false,
+        	            dataType: 'json',
+        	            success : function(data){
+        	            	if (data.result == '0'){
+	                    		   
+	                    		 	alert("Error: " + data.result_msg);
+	                    		 	
+	                    	   } else if (data.result == '1'){
+	                    		   
+	                    		   	alert("Call Status: " + data.result_msg);
+	                    	   } 
+        	            	
+        	            },
+        	   			error: function(){
+        	   				alert("Unable to connect to server");
+        	   				}
+        	   			
+        	   	 	});
+          	   	 
+        		} else {
+        				
+        				if(userid === null || userid.length == 0){
+	      					alert("User Id not set");
+	      				} else if (callerid === null || callerid.length == 0){
+	      					alert("Please set CallerID in account details");
+	      					
+	      				} else if (destnum === null || destnum.length == 0){
+	      					alert("Destination Number not set");
+	      					
+	      				} else {
+	      					alert("Cannot Make Call Insufficient parameters");
+	      				}
+    					
+        				//return false;
+        			}
+        	   	   	 //console.log($('a').index());
+        	   		
+        	   	//console.log($(this).href);
+ 			}// else closing for network status
+        });
+
+           
+            
+            
+           /** $('#contactlist-right-setting-popup').on('popupafteropen', function () {
+    		 //$('#contactlist-right-setting-popup').on('popupbeforeposition', function () {
+            	var center = ($(document).width() - $('.ui-popup-container').width());
+    		    //var width = $(document).width();
+    		    console.log("in after open");
+    		      var width = center + (center/2);
+    		    $('.ui-popup-container').css({
+    		        top: 10,
+    		        left: center
+    		    });  
+    		}); **/
+
+            $("#calllogslistdiv").on("click", 'a' , function(event){
+           	 	//alert("Contact Selected");
+           	 event.preventDefault();//this is compulsory for listening dynamically created elements
+           	 var datastatus = checkConnection();
+           	 
+           	 if(datastatus == "0" || datastatus == "1"){
+  				alert("No Data Network found");
+ 				
+ 			} else {
+           	 	//var hrefvalue  = $(this).href; this is not working
+	          		var userid = localStorage.getItem("userid");
+	           		var callerid = localStorage.getItem("caller_id");
+	           		var domainname = localStorage.getItem("domainname");
+	        		var destnum = $(this).attr('href').match(/([0-9])/g).join(''); // the match function extracts number put it in an array
+	        		console.log("calllogslist Div:userid " + userid);
+	        		console.log("calllogslist Div:callerid " + callerid);
+	        		console.log("calllogslist Div:destnum " + destnum);
+        	     	var recently_dialed_array = [];
+        			var recently_dialed_array = JSON.parse(localStorage.getItem("recently_dialed_array"));
+        		if(recently_dialed_array === null){
+        			var recently_dialed_array = [];
+        			recently_dialed_array.push(destnum);
+        			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+              	} else {
+              		if(recently_dialed_array.length > 10){
+              			recently_dialed_array.shift(); //this removes the  frist element
+              			recently_dialed_array.push(destnum);
+              			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+              		} else { //if recently dialed size has not reached the limit 
+              			recently_dialed_array.push(destnum);
+              			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+              		}
+              	}
+        		
+           	   	        		          		
+        	   		//if((userid.length > 0 && userid != null ) && (callerid.length > 0 && callerid != null) && (destnum.length > 0 && destnum != null)){
+        			//if(!userid && !callerid && !destnum) {
+        			if(!(userid === null) && !(callerid === null) && !(destnum === null ) && !(domainname === null )){
+        			//alert("Condition Successful");
+        	   		$.ajax({
+        	            type: "GET",
+        	            url: "http://mail.tsim.in/webcall.php",
+        	            //data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+        	           	data: {action: 'call',domains: domainname,user_id: userid,caller_id: callerid,dest_num: destnum},
+        	            cache: false,
+        	            dataType: 'json',
+        	            success : function(data){
+        	            	if (data.result == '0'){
+	                    		   
+	                    		 	alert("Error: " + data.result_msg);
+	                    		 	
+	                    	   } else if (data.result == '1'){
+	                    		   
+	                    		   	alert("Call Status: " + data.result_msg);
+	                    	   } 
+        	            	
+        	            },
+        	   			error: function(){
+        	   				alert("Unable to connect to server");
+        	   				}
+        	   			
+        	   	 	});
+          	   	 
+        		} else {
+        				
+        				if(userid === null || userid.length == 0){
+	      					alert("User Id not set");
+	      				} else if (callerid === null || callerid.length == 0){
+	      					alert("Please set CallerID in account details");
+	      					
+	      				} else if (destnum === null || destnum.length == 0){
+	      					alert("Destination Number not set");
+	      					
+	      				} else {
+	      					alert("Cannot Make Call Insufficient parameters");
+	      				}
+    					
+        				//return false;
+        			}
+        	   	   	 //console.log($('a').index());
+        	   		
+        	   	//console.log($(this).href);
+ 			}// else closing for network status
+        });
+            
+            
+            
+   /******** BELOW CODE IS CALL FOR MANUAL RETRIVAL OF CONTACT *****/         
+            
+            $(document).on('click', '#a_contact_retrive', function(){
+            	
+					             
+        	    	 console.log("Retive button is clicked");
+        	         var options = new ContactFindOptions();
+        	         options.filter="";          // empty search string returns all contacts
+        	         options.multiple=true;      // return multiple results
+        	         var filter = ["displayName" ,"name" ,"phoneNumbers"];   // return contact.displayName field
+        	
+        	         // find contacts
+        	         navigator.contacts.find(filter, onContactSuccess, onContactError, options);
+                     
+        	         function onContactSuccess(contacts) {
+        		        		var autocompletenumber = new Array();
+        		        		$("#contactlist").empty(); 
+        	    		        var database_created = localStorage.getItem("database_created");
+        		             	//alert("Contact List created");
+        		             
+        		              	if(database_created == "1"){ // if table is created than only delete rows
+        		                  	db.transaction(deletingDB, errorDeleting, successDeleting);
+        					        } else {// table created check close
+	        		            	  db.transaction(populateDB, errorCB, successCB); // if table is not created than create one and the insert into it
+	        						}
+        		             		
+		        		              	function populateDB(tx) {
+			       		                      tx.executeSql('DROP TABLE IF EXISTS CONTACTS');
+			       		                      tx.executeSql('CREATE TABLE IF NOT EXISTS CONTACTS (id unique, name, phoneNumber)');
+			       		                      console.log("Inside populateDB from mannual contact retrive ");
+			       		                      //db.transaction(getCB, errorCB);
+		       		                 		}
+	
+		       		                  	function errorCB(err) {
+		       		                      alert("Error processing SQL: " + err);
+		       		                      localStorage.setItem("database_created", "0"); 
+		       		                  	}
+	
+	       		                  
+		       		                  	function successCB() {
+		       		                      //alert("success!");
+		       		                      
+		       		                      localStorage.setItem("database_created", "1"); 
+		       		                      console.log("database created from mannual contact retrive");
+		       		                  	}
+	       		                  	
+		        		              	 function deletingDB(tx) {
+		        		                     tx.executeSql('DELETE FROM CONTACTS');
+		        		                     console.log("Inside deletingDB for contact retrive ");
+		        		                     //db.transaction(getCB, errorCB);
+		        		                	}
+		
+		        		                 function errorDeleting(err) {
+		        		                     alert("Error processing Updating: " + err);
+		        		                 	}
+		
+		        		                 function successDeleting(tx,contacts) {
+		        		                      if (contacts === null) alert("Contacts is null");
+		        		                     console.log("contact table rows deleted");
+		        		                     alert("Contacts updated");
+		        		                 	}
+		        		                 
+		        		              	function contactInsert(name,phonenumber){
+		        	               	 		//alert(name);
+		        	               	 		//alert(phonenumber);
+		        	               	 		db.transaction( function(tx){ tx.executeSql('INSERT INTO CONTACTS (name, phoneNumber) VALUES ("' +  name + '", "' + phonenumber + '")' )}, insertErrorCB, insertSuccessCB);  
+		        	               	 		}
+		
+		               					function insertSuccessCB(err){
+				               			     	console.log("Insert statement successful in manual contact retrive");
+				               			     	localStorage.setItem("database_populated", "1"); 
+			               		        	}
+		    							function insertErrorCB(err){
+		    	               			     	console.log("Insert statement failed in manual contact retrive ");
+		    	               			     	//alert("In Insert fail");
+		    	               			  		localStorage.setItem("database_populated", "0");
+		    	               		     	}       		
+        		        
+	    							// below for loop create list along with insering the database with updated contacts
+	    							for (var i=0; i<=contacts.length; i++) {
+	            		             	    if (contacts === null) continue;
+	            		             	
+	    	        		             	if(contacts[i].phoneNumbers != null)list
+	    	        						{            	
+	    	        			              	//below array is for autocomplete in direct call section 
+	    	        			              	autocompletenumber.push(contacts[i].phoneNumbers[0].value);
+	    	        			              	
+	    	        			              	//below code is to re insert the updated list
+	    	        			              	var name = contacts[i].displayName;
+	            				               	var phonenumber = contacts[i].phoneNumbers[0].value;
+	            				               	console.log("Name" + name);
+	            				               	console.log("Phonenumber" + phonenumber);
+	            				               	contactInsert(name,phonenumber);
+	    	        		             		
+	    	        		             		//below code is for pupulating the list
+	    	        		             		   		             		
+	    	        		             		var li = $("<li>");
+	    	        			            	var licls = $("</li>");
+	    	        			            	var a = $("<a>");
+	    	        			            	var acls = $("</a>");
+	    	        			            	a.attr("id", contacts[i].phoneNumbers[0].value).text(contacts[i].displayName);
+	    	        			            	a.attr("href", contacts[i].phoneNumbers[0].value);
+	    	        			            	$("#contactlist").append(li)
+	    	        			            	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+	    	        			            	li.append(acls);
+	    	        			            	$("#contactlist").append(licls); //this didnt work
+	    	        			            	$("#contactlist").listview('refresh');
+	    	        			            	//localStorage.setItem("autocompletenumberlist",JSON.stringify(autocompletenumber));
+	    	        						}
+	            		            	 
+	            		               }
+        		  };
+
+                 // onError: Failed to get the contacts
+                 //
+                 function onError(contactError) {
+                     alert('Error in loading contact list');
+                 }
+        	
+            });// a_contact_retrive click close
+            
+         
+            // BELOW CODE IS WHEN LOGOUT IS CLICKED
+            $(document).on("click","#logout", function(){
+           	 
+           	 var userid = localStorage.getItem("userid");
+           	 
+           	 if(userid != null && userid.length > 0){
+           		 alert("Login Out");
+           		 localStorage.clear();
+           		 $.mobile.changePage("#pageLogin");
+           		 
+           	 }
+                	 
+            });
+         });   // ondocument ready close
+        	
+      
+        /*** ***************************************************
+        **
+        **  PAGE TWO LOGIN PAGE
+        ***
+       
+        ************************************************************/
+        
+        
+              
+             $(document).on('pagecreate', '#pageLogin', function(){  // login check for first time login 
+              	
+              	//alert('Page two create event');
+              	console.log('Page two create event');
+              	$(document).on('click', '#lg_cancel', function() {
+              		if(navigator.app){
+        	            navigator.app.exitApp();
+        	    	}else if(navigator.device){
+        	            navigator.device.exitApp();
+        	    	}
+              	
+              	});
+              	
+              	
+              	$(document).on('click', '#lg_submit', function() {
+                		//alert('Submit button click event');
+                		console.log('Submit button click event');
+                		document.addEventListener("deviceready", onLgSubmit, false);
+               	});// on submit close
+               	
+               	function onLgSubmit(){
+               		
+	               	 var datastatus = checkConnection();
+	        		 if(datastatus == "0" || datastatus == "1"){
+		      			alert("No Data Network found");
+	      				} else {
+			        		var userid = $.trim($("#user").val());
+							var password = $.trim($("#passwd").val());
+			                if(userid.length > 0 && password.length > 0)
+			                {
+			                	//$("#loaderdialog").html("<img src='res/loader.gif'>");
+			                	//$("#spinnerdialog").show();
+			                	console.log('Submit event before sending ajax request');
+			                    $.ajax({
+			                      type: "GET",
+			                      url: "http://mail.tsim.in/webcalltest.php",
+			                      //data: {action: 'login',domains: 'tsim.in',web_storage: 'No',user_id: userid,passwd: password},
+			                      data: {action: 'login',web_storage: 'No',user_id: userid,passwd: password},
+			                      cache: false,
+			                      dataType: 'json',
+			                      success: onSuccess,
+			                      error: onError
+			                    });
+			                }else {
+			                    alert('Please fill all necessary fields');
+			                }     
+    
+        function onError(data){
+   			alert("Unable to connect to server");
+   	 	}
+        
+        function onSuccess(data)
+        {
+        	        	
+        	//alert('In pageLogin sucess');
+      	  	console.log(data.code);
+      	  
+        	  var resp_code = data.code;
+        	  
+        	  if(resp_code == '0')
+        		  {
+        	  		alert("Unable to connect to database");
+        	  		//return false; // note check this if any alternate is available
+        		  }
+        	  else if( resp_code == '1')
+        		  {
+        		  	alert("Login details not received");
+        		  	//return false;
+        		  }
+        	  else if(resp_code == '2')
+        		  {
+        		  	alert("Wrong username or password");
+        		  	//return false;
+        		  }
+        	  else if(resp_code == '3')
+        		  {
+        		  	alert("No register number found");
+        		  	//return false;
+        		  }
+        	  else if(resp_code == '4')
+        		  {
+        		  	//alert("register number details found");
+        		  	console.log("register number details found");
+					/**	        		  	
+        		  	
+        		  	// below code is to save the information in web storage 
+            		  try {
+	                  	    localStorage.setItem("userid", userid);
+	                  	    localStorage.setItem("passwd", password);
+	                  	    
+	                  	    // below code is to set the credit details
+	                  	  	if (data.credit == null || data.credit == '0')
+	                     		localStorage.setItem("credit_details", "0.0");
+	                     	else
+	                     		localStorage.setItem("credit_details",parseFloat(data.credit).toFixed(2));	                     		
+	                     		//localStorage.setItem("credit_details",data.credit);
+	                  	  
+	                  	    // below code is to save the registernumber list in web storage  for first time
+	                  	  	var  registernumberloaded = localStorage.getItem("registernumberloaded"); // checking if registernumberarray is already set with old data
+	                   	  	if(registernumberloaded != null && registernumberloaded == "Yes"){
+		                   			localStorage.removeItem("registernumberarray");
+		                   			console.log("registernumberarray removed from web storage");
+	                   	  	} else {
+			                      	  var registernumberarray = [];
+			                      	  registernumberarray.push(data.numberlist);
+			                      	  localStorage.setItem("registernumberarray", JSON.stringify(registernumberarray));
+			                      	  localStorage.setItem("registernumberloaded", "Yes");
+			                      	  console.log("registernumberarray stored in database");
+	                   	  }
+	                  	   
+                  	
+                  	}
+                  	catch (e) {
+                  	    if (e == QUOTA_EXCEEDED_ERR) {
+                  	        console.log("Error: Local Storage limit exceeds.");
+                  	    }
+                  	    else {
+                  	        console.log("Error: Saving to local storage.");
+                  	    }
+                  	}
+                  	**/
+                  	console.log("printing domainslist length" + data.domainslist.length);
+                  	
+                	if(data.domainslist.length >= 1){ // ie if the entered username belongs to more than one domains
+                		$.mobile.changePage($("#pageDomainDialog"), { transition : "slide"});
+                  		console.log("Inside Length greater than two");
+                  		
+                  		for(var i in data.domainslist){
+                  			                			
+                  			console.log("appending checkbox");
+                  			console.log("value of i" + i);
+                  			console.log("domainname claues retrived are " + data.domainslist[i].domainname);
+                  			    $("#domainnamelist").append('<li><input type="radio" value="' + data.domainslist[i].domainname + '" id="domainnamevalue"><label for="domainnamevalue" style="display: block; float:right; text-align:left;">' + data.domainslist[i].domainname + '</label></li>');
+                  			  	$("#domainnamelist").listview('refresh');
+
+                  			
+                  		/**
+                  			var li = $("<li>");
+        	            	var licls = $("</li>");
+        	            	var checkbox = $("<input type='checkbox'/>");
+        	            	checkbox.attr("id", "domainnamevalue");
+        	            	checkbox.attr("value", data.domainslist[i]);
+        	            	li.append(checkbox);
+        	            	$("#domainnamelist").append(licls); 
+        	            	$("#domainnamelist").listview('refresh');
+                  		}
+                  		console.log("domainnamelistdiv refereshing");
+                  		$("#domainnamelistdiv").html('refresh');
+                  		//$.mobile.changePage($("#pageDomainDialog"), { transition : "slide"});**/
+                		}	
+                  	}else{
+                  		localStorage.setItem("domainname", data.domainslist[0].domainname);// ie if the entered username contains only one domainsname
+                  		console.log("Inside Length greter than 1");
+                  	  	//$.mobile.changePage("callconsoletwo.html #pageDirectCall"), { transition : "slide",reverse: false,data: userame});
+                  		$.mobile.changePage($("#pageDialPad"), { transition : "slide"});
+                  	}
+                  	//$.mobile.changePage($("#pageDialPad"), { transition : "slide"});
+         		  }
+        	  else {
+        		  
+        		$.mobile.changePage($("#pageLoginPage"), { transition : "slide"});
+        		
+        	  }
+        	  
+          }// on success close
+      	} // else close network status 
+	}// onLgSubmit close
+               	
+               	function checkConnection() {
+                    var networkState = navigator.connection.type;
+                    
+                    var states = {};
+                    states[Connection.UNKNOWN]  = '0';
+                    states[Connection.NONE]     = '1';
+                    states[Connection.CELL_2G]  = '2';
+                    states[Connection.CELL_3G]  = '3';
+                    states[Connection.CELL_4G]  = '4';
+                    states[Connection.ETHERNET] = '6';
+                    states[Connection.WIFI]     = '5';
+                    
+                    return states[networkState];
+                }// function checkConnection close       
+               	
+              });  // pageLogin oncreate close
+              
+              
+  
+ /********************************************** LOGIN PAGE CLOSE **************/             
+                
+
+ /***************** DomainDialog LOAD STARTS HERE *******************/
+              	
+ 
+ 				$(document).on('pagecreate', '#pageDomainDialog', function(){ 
+                	//$("#domainnamelist").listview('refresh');
+                	console.log("Inside pageDomainDialog create");
+                	
+                	$(document).on('click', '#domains_ok', function(){
+                		
+                		alert("Domains ok clicked");
+                		//document.addEventListener("deviceready", onOkClicked, false);
+                		//function onOkClicked() {
+                		$("input[id*=domainnamevalue]:checked").each(function() {
+                			var domainname = $(this).val();
+                			if(domainname === null)
+                			alert("please select atleast one of the domains");
+                			else{
+                            alert($(this).val());
+                        	console.log("Storing the domainsname ");
+                            localStorage.setItem("domainname", domainname);
+                            $.mobile.changePage($("#pageDialPad"), { transition : "slide"});
+                			}
+                        });
+                	//}
+                	});
+                	
+                });
+
+              
+ /********************************************** DOMAIN DIALOG PAGE CLOSE **************/          
+              
+/***************** PAGEDIRECTCALL LOAD STARTS HERE *******************/
+ 
+              $(document).on('pagecreate', '#pageDirectCall', function(){ 
+              	console.log("test1");
+              	//alert("Inside pageDirectCall");
+              	/**var autocompletenumber = new Array();
+              	autocompletenumber = JSON.parse(localStorage.getItem("autocompletenumberlist"));
+              	if(autocompletenumber){
+              	console.log("autocompletenumber is not set to null");	
+              	
+              	$('#phone_num').autocomplete({
+              		source: autocompletenumber
+              	});
+              	}**/
+              	document.addEventListener("deviceready", onPageReady, false);
+              	              	
+      	    	//alert("Inside pageDirectCall2 after deviceready ");
+      	    	console.log("Inside pageDirectCall2 after deviceready ");
+      	    	
+      	    	$(document).on('click', '#bt_register_number_retrive', function(){
+                   	console.log("bt_register_number_retrive click");
+                   	document.addEventListener("deviceready", onRetriveClick, false);
+                   	
+                 });// retrive btn close
+                 
+                 $(document).on('click', '#bt_call', function(){
+                	 console.log("Call bt click");
+                	 //alert("call button click "); 
+                	 document.addEventListener("deviceready", onCallClick, false);
+                     	
+                 });// call btn close
+      	  
+                       
+      	    	$( "#sel_register_num" ).change(function() {
+      	    	
+	      	    	//alert("select event trriged");
+	      	    	console.log("select event trriged");
+	      	    	var callerid = $(this).val();
+	      	    	//alert(" selected caller id" + callerid);
+	      	    	console.log(" selected caller id" + callerid);
+	      	    	localStorage.setItem("caller_id", callerid);
+	      	    	//alert("callerid Local stored");
+	      	    	console.log("callerid Local stored");
+      	    	      	    
+          		});
+      	    	
+      	    	function onCallClick(){
+      	    		
+      	    		var datastatus = checkConnection();
+                 	if(datastatus == "0" || datastatus == "1"){
+            				
+            				alert("No Data Network found");
+            				
+            			} else {  
+                 	  
+     	              	console.log("test");
+     	              	var userid = localStorage.getItem("userid");
+     	              	var callerid = localStorage.getItem("caller_id");
+     	              	var domainname = localStorage.getItem("domainname");
+     	              	var dest = $('#phone_num').val();
+     	      			var destnum = $.trim($('#phone_num').val()); // note when no value is entered the it does not passes null but some garbage so 'destnum !== null' will set to true instead use destnum != ""    
+     	      			
+     	      			//alert("userid" + userid);
+     	      			//alert("callerid" + callerid);
+     	      			//alert("phone_num" + destnum);
+     	      			//alert(dest);
+     	      			console.log("userid" + userid);
+     	      			console.log("callerid" + callerid);
+     	      			console.log("phone_num" + destnum);
+     	      			console.log("phone_num length" + destnum.length);
+     	      			console.log("phone_num untrim " + dest.length);
+     	      			var recently_dialed_array = [ ]; // this must be outside the if loop i.e inside document load
+     	      			
+     	      			console.log("Recent dialed array " + recently_dialed_array);
+     	      			
+	            		var recently_dialed_array = JSON.parse(localStorage.getItem("recently_dialed_array"));
+     	      			console.log("Recent dialed array content" + recently_dialed_array);
+     	      			console.log("Recent dialed array length" + recently_dialed_array);
+	            		if(recently_dialed_array === null){
+		            			var recently_dialed_array = [ ];
+		            			recently_dialed_array.push(destnum);
+		            			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+		            			alert("Recent contact updated");
+	                  	} else {
+	                  		if(recently_dialed_array.length > 10){
+	                  			recently_dialed_array.shift(); //this removes the  frist element
+	                  			recently_dialed_array.push(destnum);
+	                  			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+	                  			alert("Recent contact updated");
+	                  		} else { //if recently dialed size has not reached the limit 
+	                  			recently_dialed_array.push(destnum);
+	                  			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+	                  			alert("Recent contact updated");
+	                  		}
+	                  	}
+     	      			
+     	      			
+     	      			
+     	      			if((userid.length > 0 && userid !== null) && (callerid.length > 0 && callerid !== null) && (destnum.length > 0 && destnum != "") && !(domainname === null)){
+     	      				
+     	      			//if(!(userid === null) && !(callerid === null) && !(destnum === null )) {
+     	              	 $.ajax({
+     	                       type: "GET",
+     	                       url: "http://mail.tsim.in/webcall.php",
+     	                       //data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+     	                       data: {action: 'call',domains: domainname,user_id: userid,caller_id: callerid,dest_num: destnum},
+     	                       cache: false,
+     	                       dataType: 'json',
+     	                       success : function(data){
+     	                    	   ////$("#loaderdialog").html("done");
+     	                    	   
+     	                    	   	if (data.credit == null || data.credit == '0')
+	                     				localStorage.setItem("credit_details", "0.0");
+	                     			else
+	                     				localStorage.setItem("credit_details",data.credit);
+     	                    	   	
+     	                    	    if (data.result == '0'){
+     	                    		   
+     	                    		 	console.log("Error: " + data.result_msg);
+     	                    		 	$('label[for=Call_status]').css({backgroundColor:'#cfc'});
+     	                    		 	$("#Call_status").text(data.result_msg);
+     	                    	   	} else if (data.result == '1'){
+     	                    		   
+     	                    		   	console.log("Call Status: " + data.result_msg);
+      	                    	   		$('label[for=Call_status]').css({backgroundColor:'#cfc'});
+     	                    	   		$("#Call_status").text(data.result_msg);
+     	                    	   	}
+     	                    	   
+     	                        },
+     		              		error: function (data){
+     		    	   				alert("Unable to connect to server");
+     		              		}
+     	    	   	 		});
+     	      			} else {
+     	      				
+     	      				if(userid === null || userid.length == 0){
+     	      					//alert("User Id not set");
+     	      					console.log("User Id not set");
+     	      					$("#Call_status").text("User Id not set");
+     	      				} else if (callerid === null ||callerid.length == 0){
+     	      					//alert("Please set CallerID in account details");
+     	      					console.log("Please set CallerID in account details");
+     	      					$("#Call_status").text("Please set CallerID");
+     	      				} else if (destnum === null || destnum.length == 0){
+     	      					//alert("Destitation number not set");
+     	      					console.log("Destitation number not set");
+     	      					$("#Call_status").text("Enter Caller number");
+     	      				} else {
+     	      					//alert("Cannot Make Call Insufficient parameters");
+     	      					console.log("Cannot Make Call Insufficient parameters");
+     	      					$("#Call_status").text("Insufficient parameters");
+     	      				}
+       	      			}
+           			
+            		}// else close for network staus 
+      	    		
+      	    	}// onCallClick
+      	    	
+      	    	 
+      	    	
+                  function onRetriveClick(){
+                	  var datastatus = checkConnection();
+                	  
+         				if(datastatus == "0" || datastatus == "1"){
+                				
+                				alert("No Data Network found");
+                				
+                			} else {  
+                       	
+                			var userid = localStorage.getItem("userid");
+                			
+                			if(userid != null){
+                				//$("#spinnerdialog").show();
+         		              	 $.ajax({
+         		                       type: "GET",
+         		                       url: "http://mail.tsim.in/webcall.php",
+         		                       data: {action: 'registernumlist',domains : 'tsim.in',user_id : userid},
+         		                       cache: false,
+         		                       dataType: 'json',
+         		                       success : function(data){
+         		                      	// $("#sel_register_num").find('option').remove().end();
+         		                      	//$("#loaderdialog").html("");
+         		                      	             //$("#sel_register_num").empty();    
+         		                      	         // $("#spinnerdialog").hide();
+         		                      	  var  registernumberloaded = localStorage.getItem("registernumberloaded"); // checking if registernumberarray is already set with old data
+         		                      	  if(registernumberloaded != null && registernumberloaded == "Yes"){
+	         		                      		localStorage.removeItem("registernumberarray");
+	         		                      		console.log("registernumberarray removed from web storage");
+         		                      	  } else {
+		         		                      	  var registernumberarray = [];
+		         		                      	  registernumberarray.push(data.numberlist);
+		         		                      	  localStorage.setItem("registernumberarray", JSON.stringify(registernumberarray));
+		         		                      	  localStorage.setItem("registernumberloaded", "Yes");
+		         		                      	  console.log("registernumberarray stored in database");
+         		                      	  }
+         		                      	 for (var i in data.numberlist) {
+         		                      		 var opt = $("<option>");
+         		                          	 opt.attr("value", data.numberlist[i].regdnumber).text(data.numberlist[i].regdnumber);
+         		                          	//registernumberobject.number = data.numberlist[i].regdnumber;
+         		                          	//registernumberobject.primnumber = data.numberlist[i].primnumber;
+         		                          	 if(data.numberlist[i].primnumber == 't'){
+         		                          		 opt.attr("selected", "selected");
+         		                          	 
+         		                          		 try {
+         		                               	    localStorage.setItem("caller_id",data.numberlist[i].regdnumber );
+         		                               	    	}
+         		                               	catch (e) {
+         		                               	    if (e == QUOTA_EXCEEDED_ERR) {
+         		                               	        console.log("Error: Local Storage limit exceeds.");
+         		                               	    }
+         		                               	    else {
+         		                               	        console.log("Error: Saving to local storage.");
+         		                               	    }
+         		                              	}
+         		                          	 }
+         		                          		 
+         		                          	$("#sel_register_num").append(opt);
+	         		                      	 console.log(data.numberlist[i].regdnumber);
+	         		                      	 console.log(data.numberlist[i].primnumber);
+         		                      	 	//alert(data.numberlist[i].regdnumber);
+         		                      	 }// data.numberlist close 
+         		                      	 
+         		                      	 //var test = data.numberlist[0].regdnumber;
+         		                      	 $("#sel_register_num").selectmenu('refresh',true);
+           		                      	 //alert("Number list updated");
+         		                      		console.log("Number list updated");
+         		                       },
+         		                       error: function (data){
+         			    	   				//alert("Unable to connect to server");
+         			    	   				console.log("Unable to connect to server");
+         			              		}
+         		              	 }); // ajax close for retrive 
+         		              	 
+                				}// if userid null close
+                				else {
+                					
+                					alert("No User Name found \n please login");
+                					//console.log("No User Name found .please login");
+                				}
+                			}// else close for network status
+                       }//onRegisterClick close                    
+             
+                  
+               function checkConnection() {
+                      var networkState = navigator.connection.type;
+                      
+                      var states = {};
+                      states[Connection.UNKNOWN]  = '0';
+                      states[Connection.NONE]     = '1';
+                      states[Connection.CELL_2G]  = '2';
+                      states[Connection.CELL_3G]  = '3';
+                      states[Connection.CELL_4G]  = '4';
+                      states[Connection.ETHERNET] = '6';
+                      states[Connection.WIFI]     = '5';
+                      
+                      return states[networkState];
+                  }// function checkConnection close       
+                  
+               function onPageReady(){
+             		
+             		//alert("pageDirectCall ready");
+             		console.log("pageDirectCall ready");
+             		
+             		var userid = localStorage.getItem("userid");
+         	        //alert("Inside pageDirectCall userid value" + userid);
+         	        
+         	        console.log("Inside pageDirectCall userid value" + userid);
+         	        
+         	    	if(userid != null && userid.length > 0){
+         	    		$("#user_id").val(userid);
+         	    		$("#user_id").attr("disabled", "disabled");
+         	    		
+         	    		var registernumberarray = [];
+         	    		var registernumberloaded = localStorage.getItem("registernumberloaded");// check if register number data is available
+         	    		if( registernumberloaded != null && registernumberloaded == "Yes"){
+         	    			registernumberarray = JSON.parse(localStorage.getItem("registernumberarray"));
+         	    			console.log("registernumberarray length" + registernumberarray[0].length);
+         	    			console.log("registernumberarray values from webstorage" + registernumberarray[0]);	 
+         	    			var registernumber = registernumberarray[0];
+         	    			   $("#sel_register_num").empty();       	    
+		                       	 for (var i in registernumberarray[0]) {
+		                       		//var registernumber = registernumberarray.numberlist[i];
+	         	    			    //console.log("Register Number" + registernumberarray[0].regdnumber[i]);
+		                       		console.log("Register Number" + registernumber[i].regdnumber);
+		                       	    var opt = $("<option>");
+		                           	 opt.attr("value",registernumber[i].regdnumber).text(registernumber[i].regdnumber);
+		                           	 
+		                           	 // check for previously set callerid
+		                           	 var previouscallerid = localStorage.getItem("caller_id")
+		                           	 if (previouscallerid != null && (previouscallerid == registernumber[i].regdnumber))
+		                           		opt.attr("selected","selected");
+		                           	 else if (registernumber[i].primnumber == 't' && previouscallerid === null) // this condition is if the select option is fill for frist time
+		                           		opt.attr("selected","selected");
+		                           	 
+		                           	 
+		                           	 //opt.attr("value",registernumberarray[0].regdnumber[i]).text(registernumberarray[0].regdnumber[i]);
+		                           	 $("#sel_register_num").append(opt);
+		                       	 }
+		                           	$("#sel_register_num").selectmenu('refresh',true);
+			                       	 //alert("Number list updated");
+			                       	 console.log("Number list updated");
+		                           	// opt.attr("selected", "selected");
+		                    	    			    
+         	    			} else {
+         	    				
+         	    				//alert("Unable populate the register number list from web storage");
+         	    				console.log("Unable populate the register number list from web storage");
+         	    			}
+          	    		} else {
+      
+         	    		alert("Unable to get userid..\n. Please Reload the app");
+         	    		
+         	    	}
+          	    	
+             	}// function PageReady close  
+                
+              });// onpageDirectCall create
+              
+
+ 	/********************************************************** PAGEONEX CLOSE **************************************************/             
+              
+         
+              
+              
+     /******************** PAGE SETTINGS ONCREATE EVENT STARTS HERE **************************/
+              
+              $(document).on('pagecreate', '#pageSettings', function(){ 
+	              	console.log("Inside pageonesettings");
+	              	console.log("Inside pageonesettings");
+	              	
+	              	//document.addEventListener("deviceready", onPageReady, false);
+		              	
+	      	    	console.log("Inside pageonesettings after deviceready ");
+                            	       	
+      	    		$( "#sel_settings_register_num" ).change(function() {
+      	    	
+			      	    	//alert("select event trriged");
+			      	    	console.log("select event trriged");
+			      	    	var callerid = $(this).val();
+			      	    	//alert(" selected caller id" + callerid);
+			      	    	localStorage.setItem("caller_id", callerid);
+			      	    	console.log("callerid Local stored");
+			      	    	//alert("callerid Local stored");
+      	    		});
+      	    		
+      	    		// BELOW CODE IS TO CONTROL TRANSITION WHEN THE SETTINGS REFRESH BUTTON IS PRESSED //                    
+                    $(document).on('click', '#a_refresh', function(){
+      	    			console.log("bt_refresh_test");
+                    	//alert("bt_retrive_test clicked");
+                    	var usrl = document.URL ;
+                    	//alert(usrl);
+                    	console.log(usrl);
+                 	 	$.mobile.changePage("#pageSettings",{
+      						      	  allowSamePageTransition : true,
+      							      transition              : 'none',
+      							      showLoadMsg             : true
+      				});
+
+                    });
+      	    		
+      	         	    		
+  	      	    	$(document).on('click', '#bt_settings_register_num_retrive', function(){
+		                	
+	      	    			console.log("bt_retrive_test");
+		                	//alert("bt_retrive_test clicked");
+		                	document.addEventListener("deviceready", onSettingsRetriveClick, false);
+		                	
+                	 });// retrive btn close
+                	                
+                	                
+               function onSettingsRetriveClick(){
+                	                	
+            	 	var datastatus = checkConnection();
+               		if(datastatus == "0" || datastatus == "1"){
+          				
+          				alert("No Data Network found");
+          				
+          			} else {  
+           	 		
+          				var userid = localStorage.getItem("userid");
+            			
+            			if(userid != null){	
+            				//$("#spinnerdialog").show();
+            				
+	               	 $.ajax({
+	                        type: "GET",
+	                        url: "http://mail.tsim.in/webcall.php",
+	                        data: {action: 'registernumlist',domains : 'tsim.in',user_id : userid},
+	                        cache: false,
+	                        dataType: 'json',
+	                        success : function(data){
+	                       	// $("#sel_register_num").find('option').remove().end();
+	                       				//$("#spinnerdialog").hide();
+	                       				console.log("regsiternumber ");
+	                       	             $("#sel_settings_register_num").empty();       	    
+				                       	 for (var i in data.numberlist) {
+				                       		 var opt = $("<option>");
+				                       		console.log("regsiternumber " + data.numberlist[i].regdnumber);
+				                           	 opt.attr("value", data.numberlist[i].regdnumber).text(data.numberlist[i].regdnumber);
+				                           	 opt.attr("selected", "selected");
+				                           	 if(data.numberlist[i].primnumber == 't'){
+				                           		 opt.attr("selected", "selected");
+				                           	 
+				                           		 try {
+				                                	    localStorage.setItem("caller_id",data.numberlist[i].regdnumber );
+				                                	    	}
+				                                	catch (e) {
+				                                	    if (e == QUOTA_EXCEEDED_ERR) {
+				                                	        console.log("Error: Local Storage limit exceeds.");
+				                                	    }
+				                                	    else {
+				                                	        console.log("Error: Saving to local storage.");
+				                                	    }
+				                                	    
+				                                	}
+				                           	 }
+				                           		 
+				                           $("#sel_settings_register_num").append(opt);
+						                       	 console.log(data.numberlist[i].regdnumber);
+						                       	 console.log(data.numberlist[i].primnumber);
+				                       	 //alert(data.numberlist[i].regdnumber);
+				                          	 }
+				                       	 
+				                       	 //var test = data.numberlist[0].regdnumber;
+				                       	 $("#sel_settings_register_num").selectmenu('refresh',true);
+				                       	 
+				                       	 //alert("Number list updated");
+				                       	 console.log("Number list updated");
+				                       
+				               	 }, 
+				               	 error: function (data){
+				        	   			alert("Unable to connect to server");
+				               	 }
+	        	   	 		});// ajax close for retrive 
+	        	   	 		
+            			}// if close for userid
+            			else {
+            				
+            				alert("Unable to get username \n Please login ");
+            			}
+	             
+	          		}// else close for network stataus 		
+
+                	                	
+                }// onSettingsRetriveClick
+           	
+               	function checkConnection() {
+                   var networkState = navigator.connection.type;
+                   
+                   var states = {};
+                   states[Connection.UNKNOWN]  = '0';
+                   states[Connection.NONE]     = '1';
+                   states[Connection.CELL_2G]  = '2';
+                   states[Connection.CELL_3G]  = '3';
+                   states[Connection.CELL_4G]  = '4';
+                   states[Connection.ETHERNET] = '6';
+                   states[Connection.WIFI]     = '5';
+                   
+                   return states[networkState];
+               }// function checkConnection close       
+               
+      	    	
+         });// onpageSettings created
+         
+         
+   /*********************************************************************************************************/      
+           $(document).on('pagecreate', '#pageRecentlyDialed', function(){ 
+	              	console.log("Inside pagerecentcontact");
+	              	console.log("Inside pagerecentcontact");
+	              	
+	              	
+	                // below function is called when the contact in the contactlist is clicked
+	                $("#recentlydialedlistdiv").on("click", 'a' , function(event){
+	               	 	//alert("Contact Selected");
+	               	 event.preventDefault();//this is compulsory for listening dynamically created elements
+	               	 var datastatus = checkConnection();
+	               	 
+	               	 if(datastatus == "0" || datastatus == "1"){
+	      				alert("No Data Network found");
+	     				
+	     			} else {
+	               	 	//var hrefvalue  = $(this).href; this is not working
+	              		var userid = localStorage.getItem("userid");
+	               		var callerid = localStorage.getItem("caller_id");
+	               		var domainname = localStorage.getItem("domainname");
+	            		var destnum = $(this).attr('href').match(/([0-9])/g).join(''); // the match function extracts number put it in an array
+	            		console.log("recentlydialedlist Div:userid " + userid);
+		        		console.log("recentlydialedlist Div:callerid " + callerid);
+		        		console.log("recentlydialedlist Div:destnum " + destnum);
+	            		
+		        		var recently_dialed_array = [];
+	            		var recently_dialed_array = JSON.parse(localStorage.getItem("recently_dialed_array")); // for getting array out of web storage use jason.parse
+	            		if(recently_dialed_array === null){
+	            			var recently_dialed_array = [];
+	            			recently_dialed_array.push(destnum);
+	            			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+	                  	} else {
+	                  		if(recently_dialed_array.length > 10){
+	                  			recently_dialed_array.shift(); //this removes the  frist element
+	                  			recently_dialed_array.push(destnum);
+	                  			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+	                  		} else { //if recently dialed size has not reached the limit 
+	                  			recently_dialed_array.push(destnum);
+	                  			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+	                  		}
+	                  	}
+	            		
+	               	   	        		          		
+	            	   	//if((userid.length > 0 && userid != null ) && (callerid.length > 0 && callerid != null) && (destnum.length > 0 && destnum != null)){
+	            			//if(!userid && !callerid && !destnum) {
+	            			if(!(userid === null) && !(callerid === null) && !(destnum === null ) && !(domainname === null)){
+	            			//alert("Condition Successful");
+	            	   		$.ajax({
+	            	            type: "GET",
+	            	            url: "http://mail.tsim.in/webcall.php",
+	            	            //data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+	            	            data: {action: 'call',domains: domainname,user_id: userid,caller_id: callerid,dest_num: destnum},
+	            	            cache: false,
+	            	            dataType: 'json',
+	            	            success : function(data){
+	            	            	if (data.result == '0'){
+	    	                    		   
+	    	                    		 	alert("Error: " + data.result_msg);
+	    	                    		 	
+	    	                    	   } else if (data.result == '1'){
+	    	                    		   
+	    	                    		   	alert("Call Status: " + data.result_msg);
+	    	                    	   } 
+	            	            	
+	            	            },
+	            	   			error: function(){
+	            	   				alert("Unable to connect to server");
+	            	   				}
+	            	   			
+	            	   	 	});
+	              	   	 
+	            		} else {
+	            				
+	            				if(userid === null || userid.length == 0){
+	    	      					alert("User Id not set");
+	    	      				} else if (callerid === null || callerid.length == 0){
+	    	      					alert("Please set CallerID in account details");
+	    	      					
+	    	      				} else if (destnum === null || destnum.length == 0){
+	    	      					alert("Destination Number not set");
+	    	      					
+	    	      				} else {
+	    	      					alert("Cannot Make Call Insufficient parameters");
+	    	      				}
+	        					
+	            				//return false;
+	            			}
+	            	   	   	 //console.log($('a').index());
+	            	   		
+	            	   	//console.log($(this).href);
+	     			}// else closing for network status
+	            }); //recentlydialedlistdiv click event close
+	              	
+	                function checkConnection() {
+	                    var networkState = navigator.connection.type;
+	                    
+	                    var states = {};
+	                    states[Connection.UNKNOWN]  = '0';
+	                    states[Connection.NONE]     = '1';
+	                    states[Connection.CELL_2G]  = '2';
+	                    states[Connection.CELL_3G]  = '3';
+	                    states[Connection.CELL_4G]  = '4';
+	                    states[Connection.ETHERNET] = '6';
+	                    states[Connection.WIFI]     = '5';
+	                    
+	                    return states[networkState];
+	                }// function checkConnection close     
+	              	
+           }); // pagecreate for recfentlydialed close
+       
+  
+           /************************************************************CALL LOGS PAGE STARTS **********************************/
+         
+           $(document).on('pagecreate', '#pageCallLogs', function(){
+        	   //alert("Page Calllogs created");
+        	   document.addEventListener("deviceready", onCalllogList, false);
+                     
+               function onCalllogList() {
+            	   //alert("onCalllogList device ready");
+            	   console.log('onCalllogList ready1');
+              
+                   	var successCallback = function(message) { 
+                   		//var data = $.parseJSON(message);
+                   		//console.log("parsejason output " + data);
+                   		for(var i in message.Rows)
+                   			{
+	                   			var li = $("<li>");
+	                           	var licls = $("</li>");
+	                           	var a = $("<a>");
+	                           	var acls = $("</a>");
+	                           	if(message.Rows[i][1] !== null)
+	                           		a.attr("id", message.Rows[i][0]).text(message.Rows[i][1]);
+	                           	else
+	                           		a.attr("id", message.Rows[i][0]).text(message.Rows[i][0]);
+	                           	a.attr("href", message.Rows[i][0]);
+	                           	$("#calllogslist").append(li)
+	                           	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+	                           	li.append(acls);
+	                           	$("#calllogslist").append(licls); //this didnt work
+	                           	$("#calllogslist").listview('refresh');
+                   			 
+                   			}
+                   		//console.log("Call logs" + message); 
+                   		}; //alert("Success" + message.result); };
+           	    	var errorCallback = function(message) { alert("Oopsie! " + message); };
+                   	
+           	    	
+           	    calllogPlugin.createEvent(successCallback,errorCallback);
+           }// oncallloglist close
+        	
+           
+           });// calllog page created close
+   
+           
+       $(document).on('click', '#a_calllogs_refresh', function(){
+    	   
+       		console.log("Call log refresh clicked")
+           //document.addEventListener("deviceready", onCalllogList, false);
+           
+           //function onCalllogList() {
+        	   //alert("onCalllogList device ready");
+        	   console.log('onCalllogList ready1');
+          
+               	var successCallback = function(message) { 
+               		//var data = $.parseJSON(message);
+               		//console.log("parsejason output " + data);
+               		for(var i in message.Rows)
+               			{
+               			var li = $("<li>");
+                       	var licls = $("</li>");
+                       	var a = $("<a>");
+                       	var acls = $("</a>");
+                       	if(message.Rows[i][1] !== null)
+                       		a.attr("id", message.Rows[i][0]).text(message.Rows[i][1]);
+                       	else
+                       		a.attr("id", message.Rows[i][0]).text(message.Rows[i][0]);
+                       	a.attr("href", message.Rows[i][0]);
+                       	$("#calllogslist").append(li)
+                       	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+                       	li.append(acls);
+                       	$("#calllogslist").append(licls); //this didnt work
+                       	$("#calllogslist").listview('refresh');
+               			 
+               			}
+               		//console.log("Call logs" + message); 
+               		}; //alert("Success" + message.result); };
+       	    	var errorCallback = function(message) { alert("Oopsie Unable to retrive contact! " + message); };
+               	
+       	    	
+       	    calllogPlugin.createEvent(successCallback,errorCallback);
+       //}// oncallloglist close
+           
+      });
+           
+     
+       $(document).on('pagecreate', '#pageDialPad', function(){
+     	  
+     	  
+     	  document.addEventListener("deviceready", ondialed, false);
+     	  
+     	function ondialed() {
+     	   var dialednumber = null;
+     	   
+     	  $('#diallist').on('click', 'a', function(event){
+     		 	event.stopImmediatePropagation();
+     	    	event.preventDefault();
+     			var clickedval = $(this).attr('href');
+     			console.log("Dialed number is " + dialednumber);
+       			if (clickedval == "clear"){
+       			
+       			if (dialednumber !== null){
+       				
+       				var digit; // note for array function like pop,push to work declare it in the scope of the function
+       				
+         	  		//digit = $.makeArray(dialednumber); //note this function doesnot covert the value in varialbe to array, instead it add the value of the variable as the first value(i.e 0th element) in the array
+         	  		//digit.push("6");
+         	  		//alert(digit); //uncomment the above lines and see 
+         	  		
+         	  		digit = dialednumber.split("");
+       				digit.pop();
+       				//alert(digit);
+       				dialednumber = digit.join("");
+       				
+       				$('#dialednumber').val(dialednumber);
+       				
+        			}else
+       				$('#dialednumber').val("");
+       			
+       			console.log("Dialed number after clear " + dialednumber);
+       			
+       		}
+       		else if (dialednumber !== null && !isNaN(clickedval)){
+       			
+       			dialednumber = dialednumber + clickedval;
+       			$('#dialednumber').val(dialednumber);
+       			
+       		}
+       		else if (clickedval == "call"){ // when call button is clicked
+ 				
+       			if( $('#dialednumber').val() == ""){
+       				alert("Please Dial an valid number");
+       			}else{
+       			var datastatus = checkConnection();
+              	if(datastatus == "0" || datastatus == "1"){
+         				
+         				alert("No Data Network found");
+         				
+         			} else {  
+              	  
+  	              	console.log("test");
+  	              	var userid = localStorage.getItem("userid");
+  	              	var callerid = localStorage.getItem("caller_id");
+  	              	var domainname = localStorage.getItem("domainname");
+  	              	var dest = $('#dialednumber').val();
+  	      			var destnum = $.trim($('#dialednumber').val()); // note when no value is entered the it does not passes null but some garbage so 'destnum !== null' will set to true instead use destnum != ""    
+  	      			
+  	      			//alert("userid" + userid);
+  	      			//alert("callerid" + callerid);
+  	      			//alert("phone_num" + destnum);
+  	      			//alert(dest);
+  	      			console.log("userid" + userid);
+  	      			console.log("callerid" + callerid);
+  	      			console.log("phone_num" + destnum);
+  	      			console.log("phone_num length" + destnum.length);
+  	      			console.log("phone_num untrim " + dest.length);
+  	      			var recently_dialed_array = [ ]; // this must be outside the if loop i.e inside document load
+  	      			
+  	      			console.log("Recent dialed array " + recently_dialed_array);
+  	      			
+             		var recently_dialed_array = JSON.parse(localStorage.getItem("recently_dialed_array"));
+  	      			console.log("Recent dialed array content" + recently_dialed_array);
+  	      			console.log("Recent dialed array length" + recently_dialed_array);
+             		if(recently_dialed_array === null){
+ 	            			var recently_dialed_array = [ ];
+ 	            			recently_dialed_array.push(destnum);
+ 	            			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+ 	            			//alert("Recent contact updated");
+ 	            			console.log("Recent contact updated");
+                   	} else {
+                   		if(recently_dialed_array.length > 10){
+                   			recently_dialed_array.shift(); //this removes the  frist element
+                   			recently_dialed_array.push(destnum);
+                   			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+                   			//alert("Recent contact updated");
+                   			console.log("Recent contact updated");
+                   		} else { //if recently dialed size has not reached the limit 
+                   			recently_dialed_array.push(destnum);
+                   			localStorage.setItem("recently_dialed_array",JSON.stringify(recently_dialed_array));
+                   			//alert("Recent contact updated");
+                   			console.log("Recent contact updated");
+                   		}
+                   	}
+  	      			
+  	      			
+  	      			
+  	      			//if((userid.length > 0 && userid !== null) && (callerid.length > 0 && callerid !== null) && (destnum.length > 0 && destnum != "")){
+  	      			if(!(userid === null) && !(callerid === null) && (destnum.length > 0 && destnum != "") && !(domainname === null)){
+  	      			//if(!(userid === null) && !(callerid === null) && !(destnum === null )) {
+  	              	 $.ajax({
+  	                       type: "GET",
+  	                       url: "http://mail.tsim.in/webcall.php",
+  	                       //data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+  	                       data: {action: 'call',domains: domainname,user_id: userid,caller_id: callerid,dest_num: destnum},
+  	                       cache: false,
+  	                       dataType: 'json',
+  	                       success : function(data){
+  	                    	   ////$("#loaderdialog").html("done");
+  	                    	   
+  	                    	   	if (data.credit == null || data.credit == '0')
+                      				localStorage.setItem("credit_details", "0.0");
+                      			else
+                      				localStorage.setItem("credit_details",data.credit);
+  	                    	   	
+  	                    	    if (data.result == '0'){
+  	                    		   
+  	                    		 	console.log("Error: " + data.result_msg);
+  	                    		 	//$('label[for=Call_status]').css({backgroundColor:'#cfc'});
+  	                    		 	//$("#Call_status").text(data.result_msg);
+  	                    		 	alert(data.result_msg);
+  	                    	   	} else if (data.result == '1'){
+  	                    		   
+  	                    		   	console.log("Call Status: " + data.result_msg);
+   	                    	   		//$('label[for=Call_status]').css({backgroundColor:'#cfc'});
+  	                    	   		//$("#Call_status").text(data.result_msg);
+   	                    	   		alert(data.result_msg);
+  	                    	   	}
+  	                    	   
+  	                        },
+  		              		error: function (data){
+  		    	   				alert("Unable to connect to server");
+  		              		}
+  	    	   	 		});
+  	      			} else {
+  	      				
+  	      				if(userid === null || userid.length == 0){
+  	      					alert("User Id not set");
+  	      					console.log("User Id not set");
+  	      					//$("#Call_status").text("User Id not set");
+  	      				} else if (callerid === null ||callerid.length == 0){
+  	      					alert("Please set CallerID in account details");
+  	      					console.log("Please set CallerID in account details");
+  	      					//$("#Call_status").text("Please set CallerID");
+  	      				} else if (destnum === null || destnum.length == 0 || destnum == ""){
+  	      					alert("Destitation number not set");
+  	      					console.log("Destitation number not set");
+  	      					//$("#Call_status").text("Enter Caller number");
+  	      				} else {
+  	      					alert("Cannot Make Call Insufficient parameters");
+  	      					console.log("Cannot Make Call Insufficient parameters");
+  	      					//$("#Call_status").text("Insufficient parameters");
+  	      				}
+    	      			}
+        			
+         		}// else close for network staus 
+  	      		}// dialed number check close		
+       		}
+       		else{     			
+           		dialednumber = clickedval;
+           		console.log("Dialed number after appending" + dialednumber);
+       			$('#dialednumber').val(dialednumber);
+        			}
+     		  
+     		  
+     	  });      		
+     	  }
+     	  
+     	  function checkConnection() {
+               var networkState = navigator.connection.type;
+               
+               var states = {};
+               states[Connection.UNKNOWN]  = '0';
+               states[Connection.NONE]     = '1';
+               states[Connection.CELL_2G]  = '2';
+               states[Connection.CELL_3G]  = '3';
+               states[Connection.CELL_4G]  = '4';
+               states[Connection.ETHERNET] = '6';
+               states[Connection.WIFI]     = '5';
+               
+               return states[networkState];
+           }// function checkConnection close     
+     	  
+     	  
+       });
+           
+           
+                
+  /******************************************* PGECONTAINER  SHOW EVENT **************************************************/ 	
+        	
+ // $(document).on('pageshow', '#pageSettings', function(){// pageshow event will get deprecated
+        $(document).on('pagecontainershow', function (e, ui) {
+        	
+        /**	// below code is for changing the navbar select 
+        	var current = $( this ).jqmData( "title" );
+			// Remove active class from nav buttons
+			$( "[data-role='navbar'] a.ui-btn-active" ).removeClass( "ui-btn-active" );
+			// Add active class to current nav button
+			$( "[data-role='navbar'] a" ).each(function() {
+				if ( $( this ).text() === current ) {
+					$( this ).addClass( "ui-btn-active" );
+				}
+			});
+        	
+        	**/
+        	
+        	//$('#diallist').selectable();
+        	
+        	
+        	
+        	
+        	$('#a_directcall_menu').on('click', function(){
+        			console.log("Inside directcall ");	
+	      		  $('#directcall-right-setting-popup').popup('reposition', 'positionTo: origin');
+	      		  $('#directcall-right-setting-popup').popup("open");
+     	  		});
+           	$('#a_contactlist_menu').on('click', function(){
+	       		  $('#contactlist-right-setting-popup').popup('reposition', 'positionTo: origin');
+	       		  $('#contactlist-right-setting-popup').popup("open");
+       	  		});
+           
+           	$('#a_calllogs_menu').on('click', function(){
+	       		  $('#calllogs-right-setting-popup').popup('reposition', 'positionTo: origin');
+	       		  $('#calllogs-right-setting-popup').popup("open");
+       	  		});        		
+           	$('#a_recentlydialed_menu').on('click', function(){
+        		  $('#recentlydialed-right-setting-popup').popup('reposition', 'positionTo: origin');
+      		  	  $('#recentlydialed-right-setting-popup').popup("open");
+      	  		});
+         
+        	var ThisPage = $(':mobile-pagecontainer').pagecontainer('getActivePage').attr('id');
+        	
+        	if(ThisPage == "pageSettings"){ // this condition checks for which page show event is triggered
+        		
+           	 	console.log("Inside pagesetting containershow event"); //becos pageshow event is deprecated
+            	//alert("Inside pageSettings show event");
+            	
+            	document.addEventListener("deviceready", onPageReady, false);
+            
+            	function onPageReady(){
+           		
+       			//alert("pageSettings ready");
+       			console.log("pageSettings ready");
+       			var userid = localStorage.getItem("userid");
+     	             	        
+     	    	if(userid != null && userid.length > 0){
+     	    		$("#settings_userid").text(userid);
+     	    	}
+     	    	
+     	    	var domainname = localStorage.getItem("domainname");
+      	        
+     	    	if(domainname != null && domainname.length > 0){
+     	    		$("#settings_domainame").text(domainname);
+     	    	}
+     	    	
+       			var registernumberarray = [];
+  	    		var registernumberloaded = localStorage.getItem("registernumberloaded");// check if register number data is available
+  	    		if( registernumberloaded != null && registernumberloaded == "Yes"){
+  	    			registernumberarray = JSON.parse(localStorage.getItem("registernumberarray"));
+  	    			console.log("registernumberarray length" + registernumberarray[0].length);
+  	    			//console.log("registernumberarray values from webstorage" + registernumberarray[0]);	 
+  	    			var registernumber = registernumberarray[0];
+  	    			   $("#sel_settings_register_num").empty();       	    
+                        	 for (var i in registernumberarray[0]) {
+                        		console.log("Register Number" + registernumber[i].regdnumber);
+                        	    var opt = $("<option>");
+                            	 opt.attr("value",registernumber[i].regdnumber).text(registernumber[i].regdnumber);
+                            	 
+                           		 //check for previously set callerid
+                           		 var previouscallerid = localStorage.getItem("caller_id");
+                           			console.log("previouscallerid " + previouscallerid);
+
+                            	 if (previouscallerid != null && (previouscallerid == registernumber[i].regdnumber)){
+                            		 console.log("previouscallerid condition satisfied");
+                            		 opt.attr("selected","selected");
+                            	 }	
+                            	 else if (registernumber[i].primnumber == 't' && previouscallerid === null) // this condition is if the select option is fill for frist time
+                            		opt.attr("selected","selected");
+                            	 //opt.attr("value",registernumberarray[0].regdnumber[i]).text(registernumberarray[0].regdnumber[i]);
+                            	 $("#sel_settings_register_num").append(opt);
+                        	 }
+                            	$("#sel_settings_register_num").selectmenu('refresh',true);
+ 	                       	 	console.log("Number list updated");
+                                  	    			    
+  	    			} else {
+  	       	    			alert("Unable populate the register number list from web storage.");
+  	    			}// else close for retriving number online 		
+  	    			
+  	    		var datastatus = checkConnection();
+  	    		//alert("settings: datastatus " + datastatus);
+            		if(datastatus == "0" || datastatus == "1"){
+       				alert("In internet on status and datastatus" + datastatus);
+            			//$("#internetstatus option").eq("off").prop('selected', true);
+            			 $("#internetstatus").val('off');
+            			 $("#internetstatus").attr("disabled", "disabled");
+            			 $("#internetstatus").slider('refresh');
+            			//$("#internetstatus").attr("disabled", "disabled");
+       				
+       			} else {  
+  	    			
+  	    				//$("#internetstatus option").eq("on").prop('selected', true);
+  	    	 			//alert("In internet off status and datastatus" + datastatus);
+  	    	 			$("#internetstatus").val('on');
+  	    	 			$("#internetstatus").attr("disabled", "disabled");
+  	    	 			$("#internetstatus").slider('refresh');
+  	    		  	    		
+       			}
+            		
+            		var creditdetails = localStorage.getItem("credit_details")
+            		//alert("settings: creditdetails" + creditdetails);
+            		if(creditdetails != null ){
+            			$("#creditdetails").text(creditdetails);
+            		}
+            		
+       		
+       		}// function PageReady close  
+            	
+       		function checkConnection() {
+                 var networkState = navigator.connection.type;
+                 
+                 var states = {};
+                 states[Connection.UNKNOWN]  = '0';
+                 states[Connection.NONE]     = '1';
+                 states[Connection.CELL_2G]  = '2';
+                 states[Connection.CELL_3G]  = '3';
+                 states[Connection.CELL_4G]  = '4';
+                 states[Connection.ETHERNET] = '6';
+                 states[Connection.WIFI]     = '5';
+                 
+                 return states[networkState];
+             }// function checkConnection close       
+          } // if close for pageSettings check event
+          else if (ThisPage == "pageRecentlyDialed"){
+        	  
+          		console.log("In Recent Contact List");
+        		var recently_dialed_array = [];
+        		var recently_dialed_array = JSON.parse(localStorage.getItem("recently_dialed_array"));
+        		console.log("recently dialed array= " + recently_dialed_array);
+        		//console.log("recently dialed array2= " + recently_dialed_array[0]); // this causes un caught error
+        		if(recently_dialed_array === null){
+        			$("#recentdialedlistdiv").html("No Recent Contact");
+        		}else {
+        			var recently_dialed = recently_dialed_array.reverse(); // so that the recently dialed number must be showw at the top
+        			$("#recentlydialedlist").empty();
+        			//below code is to populate le list with the recently dialed list
+        			for (var i in recently_dialed_array){
+        			
+        			var li = $("<li>");
+	            	var licls = $("</li>");
+	            	var a = $("<a>");
+	            	var acls = $("</a>");
+	            	a.attr("id", recently_dialed[i]).text(recently_dialed[i]);
+	            	a.attr("href", recently_dialed[i]);
+	            	$("#recentlydialedlist").append(li)
+	            	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+	            	li.append(acls);
+	            	$("#recentlydialedlist").append(licls); 
+	            	$("#recentlydialedlist").listview('refresh');
+        			}
+        			recently_dialed_array.reverse(); // so that the shift() function called if size of recently_dialed_array increases by 10 will 
+        											//will remove the leat recent value
+        		}
+        		
+          }
+          else if (ThisPage == "pageContactList"){
+        	/**  **/
+        	  
+        	  //$('#contactlist-right-setting-popup').popup('reposition', 'positionTo: #contentdiv');
+        	  //$('#contactlist-right-setting-popup').popup("open");
+        	  /**console.log("inside pageDirectCall container show event");
+        	  //below code is to set the register number previously set by user 
+        	  no need to add here as already added in pageshowevent
+        	  ***/
+          }
+          
+         }); // onpageSettings show close
+      
+                	
+        	// Respond to back/forward navigation
+        	$( window ).on( "navigate", function( event, data ){
+        	 
+        	/**  if( data.state.direction == "back" ) {
+        	    // Make use of the directional information
+        	    if ($.mobile.activePage.attr("id") === "pageDirectCall") {
+	        	    	if(navigator.app){
+	        	            navigator.app.exitApp();
+	        	    	}else if(navigator.device){
+	        	            navigator.device.exitApp();
+	        	    	}
+          		} else if ($.mobile.activePage.attr("id") === "pageLogin"){
+	          			if(navigator.app){
+	        	            navigator.app.exitApp();
+	        	    	}else if(navigator.device){
+	        	            navigator.device.exitApp();
+	        	    	}
+        			}
+          		} **/
+        	 });
+        	
+        	
+        </script>
+        </head>
+        <body>
+        
+        <!-- Page One i.e First page   -->
+        
+      	<div data-role="page" id="pageone">
+    			<div data-role="header" class="ui-alt-icon">
+				<h2>Web Call</h2>
+				<a href="#" class="ui-btn ui-shadow ui-corner-all ui-btn-right ui-btn-icon-notext ui-icon-delete ui-btn-inline" data-role="button" title="Close">Close</a> 
+				</div>
+    			<!--<div data-role="navbar">
+        			<ul>
+			            <li><a href="#pageDirectCall" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-phone"></a></li>
+			            <li><a href="#pageContactList" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-search"></a></li>
+			            <li><a href="#pageuserdetails"  class="ui-btn ui-shadow ui-corner-all ui-btn-icon-notext ui-icon-user" ></a></li>
+        			</ul>
+    			</div> /navbar   	
+        	
+        	--> 
+        	<div data-role="main" id="mainone" class="ui-content" align="center">
+        	<a href="#pageLogin" class="ui-btn ui-shadow ui-corner-all" data-transition="pop"> Login For Wel Call</a>
+        	</div>
+        </div>
+        
+        
+        <!-- Page Two i.e Login Page -->
+        
+        <div data-role="page" data-dialog="true" id="pageLogin">
+         	<div data-role="header" class="ui-alt-icon">
+        		<h1>Login Page</h1>
+        	</div>
+        	<form method="post" id="frm_login">
+        	<div data-role="main" id="maintwo" class="ui-content">
+        	
+        		<div data-role="fieldcontain">
+            		<label for="username">User Name:</label>
+            		<input type="text" name="user" id="user"  maxlength="100"/>
+        		</div>
+        		<div data-role="fieldcontain">
+            		<label for="password">Password:</label>
+            		<input type="password" name="passwd" id="passwd" data-typetoggle="#passwd_sav"  maxlength="100" value="" />
+        		</div> 
+        		
+        	</div>
+        	<div data-role="footer" align="right">
+        		<button type="button" class="ui-btn ui-shadow ui-corner-all" id="lg_submit" >Login</button>
+    			<button type="button" class="ui-btn ui-shadow ui-corner-all" id="lg_cancel">Cancel</button>
+    			    			    			
+  			</div>
+  		</form>
+        </div>
+             
+      <!-- Page Three i.e Call Console Page --> 
+        	
+        	<div data-role="page" id="pageDirectCall" data-title="Dial">
+   
+  			<div data-role="header" id="pageDirectCallheader" class="ui-alt-icon">
+				<h1>Dial</h1>
+    		<a id="a_directcall_menu" href="#directcall-right-setting-popup"  data-rel="popup" data-transition="slidedown" class="ui-btn ui-shadow ui-corner-all  ui-btn-right ui-btn-icon-notext ui-icon-gear ui-btn-inline" data-role="button" title="Settings">Settings</a> 
+        	</div>
+        	<div data-role="main" id="mainone" class="ui-content">
+        		 <form id=frm_call>
+	        	<div data-role="fieldcontain">
+            		<label for="username">User ID</label>
+            		<input type="number" name="user_id" id="user_id"  maxlength="10" />
+        		</div>
+        		
+        		<div data-role="fieldcontain">
+	            		<input type="number"  class="ui-shadow ui-corner-all" id="phone_num" autofocus maxlength="15"/>
+	            		<input type="button" class="ui-btn ui-shadow ui-corner-all ui-icon-phone" name="bt_call" id="bt_call" value="Call"/>
+	            		
+	        	</div>
+	        	<div data-role="fieldcontain">
+	        			<label for="Callstaus">Call Status</label>
+	        			<label for="Call_status" id="Call_status" ></label>
+	        	</div>
+	      <!--   -->
+	        	<div data-role="fieldcontain">
+	        		<label for="registernumber">Current Register Number</label>
+	        		<select class="ui-shadow ui-corner-all" id="sel_register_num" name="sel_register_num" data-placeholder="true">
+      				
+	        		</select>
+	        		<input type="button" class="ui-btn ui-shadow ui-corner-all ui-icon-phone" name="bt_register_number_retrive" id="bt_register_number_retrive" value="Refresh list"/>
+	        		<!-- <input type="button" class="ui-btn ui-shadow ui-corner-all ui-icon-phone" name="bt_showspinner" id="bt_showspinner" value="showspinner"/> -->
+	        	</div>
+	        	
+	        	<!-- <div data-role="panel" id="callconsole-right-setting-panel" data-position="right" data-display="overlay" data-position-fixed="true" >
+    			<h2>Settings</h2>-->
+    			<div data-role="content">
+    			
+    			<div data-role="popup" id="directcall-right-setting-popup"  data-inset="true" class="ui-corner-all">
+    			<ul id="menulist" data-role="listview"  data-theme="b" >
+    				<li data-role="list-divider">Settings</li>
+		    		<li><a href="calllogs.html">Account Details</a></li>
+		    		<li><a id="logout" href="#">Logout</a></li>
+    			</ul>
+    			</div>
+    			</div>
+	        	</form>
+			</div>
+			<div data-role="footer" id="testid" data-position="fixed" data-theme="b">
+				
+			<div data-role="navbar" data-grid="c">
+			        <ul>
+			        	<li><a href="#" data-icon="grid" >Dial</a></li>
+			        	<!--  <li><a href="#pageDialPad" data-icon="grid" data-role="tab" class="ui-btn ui-btn-b">Dial test</a></li>-->
+				        <li><a href="#pageContactList" data-icon="user">Contacts</a></li>
+			    		<li><a href="#pageRecentlyDialed" data-icon="phone">Recent</a></li>
+			    		<li><a href="#pageCallLogs" data-icon="clock">Call Logs</a></li>
+			    		
+			        </ul>
+			    </div><!-- /navbar -->
+  			
+  		</div>
+            </div> 
+        	
+       <!-- Page Four i.e Contact list page --> 
+    <div data-role="page" id="pageContactList" data-title="Contacts" >
+  		<div data-role="header" data-position="fixed" class="ui-alt-icon" >
+  			<a id="a_contact_retrive" href="#"  class="ui-btn ui-shadow ui-corner-all ui-btn-left ui-btn-icon-notext ui-icon-refresh" data-role="button"  title="Refresh">Refresh</a>
+    		<h2>Contacts</h2>
+    		<!--  <a id="a_menu" href="#contactlist-right-setting-popup"  data-rel="popup"  data-position-to="#contentdiv" data-transition="slidedown" class="ui-btn ui-btn-right ui-shadow ui-corner-all ui-icon-gear ui-btn-icon-notext" data-role="button"  title="Settings">Menu</a>-->
+    		<a id="a_contactlist_menu" href="#contactlist-right-setting-popup" data-rel="popup" data-transition="slidedown" class="ui-btn ui-btn-right ui-shadow ui-corner-all ui-icon-gear ui-btn-icon-notext" data-role="button"  title="Settings">Menu</a>
+    	</div>
+    	<div data-role="main" id="mainone" class="ui-content" >
+    	
+    		<div id=contactlistdiv class="ui-alt-icon">
+    			<ul id="contactlist" data-role="listview" data-filter="true"  data-filter-placeholder="Search Contact..." data-inset="true">
+    			</ul>
+    		</div>
+    		<!--  <div data-role="popup" id="contactlist-right-setting-popup"  data-position="right" data-display="overlay" data-position-fixed="true" > 
+       			<h2>Settings</h2>-->
+       			<div data-role="content" id="contentdiv">
+    			<div data-role="popup" id="contactlist-right-setting-popup"  data-inset="true" class="ui-corner-all">
+    			<ul id="menulist" data-role="listview" data-inset="true" data-theme="b" >
+		    		<!-- <li><a href="#pageDirectCall">Direct call</a></li>
+		    		<li><a href="#pageRecentlyDialed">Recent</a></li>
+		    		<li><a href="#pageCallLogs">Call Logs</a></li> -->
+		    		<li data-role="list-divider">Settings</li>
+		    		<li><a href="#pageSettings">Account Details</a></li>
+		    		<!-- <li><a href="#pageDialPad">Dial</a></li> -->
+		    		<li><a id="logout" href="#">Logout</a></li>
+    			</ul>
+    		</div>
+    		</div>
+    	</div>
+   		<div data-role="footer" data-position="fixed" data-theme="b"> <!-- data-position="fixed" is add so that the panel can be scroll -->
+   			<div data-role="navbar" data-grid="c">
+			        <ul>
+			        	<!-- <li><a href="#pageDirectCall" data-icon="grid">Dial</a></li> -->
+			        	<li><a href="#pageDialPad" data-icon="grid">Dial</a></li>
+				        <li><a href="#pageContactList" data-icon="user">Contacts</a></li>
+			    		<li><a href="#pageRecentlyDialed" data-icon="phone" >Recent</a></li>
+			    		<li><a href="#pageCallLogs" data-icon="clock">Call Logs</a></li>
+			    	</ul>
+			    </div><!-- /navbar -->
+   		</div>
+   </div>
+       
+       
+       <!-- Page Five i.e Setting Page--> 
+   
+       <div data-role="page" id="pageSettings" data-title="Settings" >
+  		<div data-role="header" data-position="fixed" class="ui-alt-icon">
+  			<a id="a_back" href="#" data-rel="back" class="ui-btn ui-shadow ui-btn-left ui-corner-all ui-btn-icon-notext ui-icon-carat-l">Back</a>
+    		<h1>Settings</h1>
+    		<a id="a_refresh" href="#" class="ui-btn ui-shadow ui-corner-all ui-btn-right ui-icon-refresh  ui-btn-icon-notext" data-role="button"  title="Menu">Refresh</a>
+    		<!-- <a id="a_menu" href="#settings-right-setting-panel" data-rel="popup"  data-transition="slidedown" class="ui-btn ui-shadow ui-corner-all ui-btn-right ui-icon-bars  ui-btn-icon-notext" data-role="button"  title="Menu">Menu</a> -->
+    	</div>
+    	<div data-role="main" id="mainone" class="ui-content" >
+    	<form id=frm_settings>
+    		<div data-role="fieldcontain"> 
+    		<div style="display: inline;">
+	        		<label for="username"style="float:left;" >User Name </label>
+	        		<label id="settings_userid" style="float:right;">NA</label>
+	        </div>
+	        </div>
+	        
+	        <div data-role="fieldcontain" >
+	        <div style="display: inline;">
+	        		<label for="Domain Name" style="float:left;">Domain Name</label>
+	        		<label id="settings_domainname" style="float:right;">tsim.in</label>
+			</div>
+			</div>
+    		<div data-role="fieldcontain">
+ 	        		<label for="registernumber">My Current number </label>
+	        		<select class="ui-shadow ui-corner-all" id="sel_settings_register_num" name="sel_settings_register_num" data-placeholder="true">
+      				</select>
+      				<input type="button" class="ui-btn ui-shadow ui-corner-all ui-icon-phone" name="bt_settings_register_num_retrive" id="bt_settings_register_num_retrive" value="Refresh list"/>	
+	        </div>
+	        </form>
+	        
+	      <!--   <div data-role="fieldcontain" style="overflow: hidden;">
+	        		<label for="internetswitch" style="display: block; float:left; text-align:left;">Internet Status:</label>&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;<!-- diaplay=block to bring lable and the select in same line 
+	        		<select  name="internetstatus" id="internetstatus" data-role="slider">
+					    <option style="font-size: 14px" value="off">Off</option>
+					    <option style="font-size: 14px" value="on">Active</option>
+					 </select> --> 
+					 
+					 <div data-role="fieldcontain" >
+					 <div style="display: inline;">
+	        		<label for="internetswitch" style="float:left; text-align:left;">Internet Status:</label>
+	        		<select  name="internetstatus" id="internetstatus" data-role="slider" style="float:right;">
+					    <option style="font-size: 14px" value="off">Off</option>
+					    <option style="font-size: 14px" value="on">Active</option>
+					 </select>
+			</div>
+			</div>
+			<div data-role="fieldcontain" style="overflow: hidden;">
+					<label for="Balance Details:" style="display: block; float:left; text-align:left;" >Balance Details</label>
+					<label id="creditdetails" style="display: block; float:right; ">0.00</label>
+			</div>
+	        <!--  <div data-role="panel" id="settings-right-setting-panel" data-position="right" data-display="overlay" data-position-fixed="true" >
+    			<h2>Settings</h2>
+    			<ul id="menulist" data-role="listview"  data-theme="b" >
+		    		<li><a href="#pageDirectCall">Direct call</a></li>
+		    		<li><a href="#pageContactList">Contacts</a></li>
+		    		<li><a href="#pageRecentlyDialed">Recent</a></li>
+		    		<li><a href="#pageCallLogs">Call Logs</a></li>
+		    		<li><a id="logout" href="#">Logout</a></li>
+    			</ul>
+    		</div>-->
+    	</div>
+   		<div data-role="footer" data-position="fixed" > <!-- data-position="fixed" is add so that the panel can be scroll -->
+	    	 <h3>www.webcall.com</h3>
+   		</div>
+   </div>
+   
+   <div data-role="page" id="pageRecentlyDialed" data-title="Recent" >
+  		<div data-role="header" data-position="fixed" class="ui-alt-icon">
+  	    		<h2>Recent</h2>
+    		<a id="a_recentlydialed_menu" href="#recentlydialed-right-setting-popup" data-rel="popup"  data-transition="slidedown" class="ui-btn ui-btn-right ui-shadow ui-corner-all ui-icon-gear  ui-btn-icon-notext" data-role="button"  title="Menu">Menu</a>
+    	</div>
+    	<div data-role="main" id="mainone" class="ui-content" >
+    		<div id=recentlydialedlistdiv class="ui-alt-icon" >
+    			<ul id="recentlydialedlist" data-role="listview" data-filter="true"  data-filter-placeholder="Search Contact..." data-inset="true">
+    			</ul>
+    		</div>
+    		<!--<div data-role="panel" id="recentcontact-right-setting-panel" data-position="right" data-display="overlay" data-position-fixed="true" >
+    			<h2>Settings</h2>-->
+    			<div data-role="content">
+    			<div data-role="popup" id="recentlydialed-right-setting-popup"  data-inset="true" class="ui-corner-all">
+    			<ul id="menulist" data-role="listview" data-inset="true" data-theme="b" >
+    				<li data-role="list-divider">Settings</li>
+    				<li><a href="#pageSettings">Account Details</a></li>
+		    		<li><a id="logout" href="#">Logout</a></li>
+    			</ul>
+    		</div>
+    		</div>
+    		
+    	</div>
+   		<div data-role="footer" data-position="fixed" data-theme="b" > <!-- data-position="fixed" is add so that the panel can be scroll -->
+   			<div data-role="navbar" data-grid="c">
+			        <ul>
+			        	<!-- <li><a href="#pageDirectCall" data-icon="grid">Dial</a></li> -->
+			        	<li><a href="#pageDialPad" data-icon="grid">Dial</a></li>
+			        	<li><a href="#pageContactList" data-icon="user">Contacts</a></li>
+			    		<li><a href="#pageRecentlyDialed" data-icon="phone">Recent</a></li>
+			    		<li><a href="#pageCallLogs" data-icon="clock">Call Logs</a></li>
+			    		<!-- <li><a href="#pageSettings" data-icon="gear">Account Details</a></li>
+			    		<li><a id="logout" data-icon="power" data-icon="href="#" >Logout</a></li> -->
+			        </ul>
+			    </div><!-- /navbar -->
+	    	
+   		</div>
+   </div>
+        
+        <div data-role="page" id="pageCallLogs" data-title="Call Logs">
+  		<div data-role="header" data-position="fixed" class="ui-alt-icon" >
+  		<a	id="a_calllogs_refresh"  href="#"  class="ui-btn ui-shadow ui-corner-all ui-btn-left ui-btn-icon-notext ui-icon-refresh" data-role="button"  title="Refresh">Refresh</a>
+    		<h2>Call Logs</h2>
+    		<a id="a_calllogs_menu" href="#calllogs-right-setting-popup" data-rel="popup" data-position-to="origin" data-transition="slidedown" class="ui-btn ui-btn-right ui-shadow ui-corner-all ui-icon-gear  ui-btn-icon-notext" data-role="button"  title="Menu">Menu</a>
+    	</div>
+    	<div data-role="main" id="calllogsmainone" class="ui-content" >
+    	
+    		<div id=calllogslistdiv class="ui-alt-icon">
+    			<ul id="calllogslist" data-role="listview" data-filter="true"  data-filter-placeholder="Search Contact..." data-inset="true">
+    			</ul>
+    		</div>
+    		<!-- <div data-role="panel" id="calllogs-right-setting-panel" data-position="right" data-display="overlay" data-position-fixed="true" >
+    			<h2>Settings</h2> -->
+    			<div data-role="popup" id="calllogs-right-setting-popup"  data-inset="false" class="ui-corner-all">
+    			<ul id="menulist" data-role="listview" data-inset="false" data-theme="b" >
+    				<li data-role="list-divider">Settings</li>
+    				<li><a href="#pageSettings">Account Details</a></li>
+		    		<li><a id="logout" href="#">Logout</a></li>
+    			</ul>
+    		</div>
+    	</div>
+   		<div data-role="footer" data-position="fixed"  data-theme="b"> <!-- data-position="fixed" is add so that the panel can be scroll -->
+	    	<div data-role="navbar" data-grid="c">
+			        <ul>
+			        	<!-- <li><a href="#pageDirectCall" data-icon="grid">Dial</a></li> -->
+			        	<li><a href="#pageDialPad" data-icon="grid">Dial</a></li>
+			        	<li><a href="#pageContactList" data-icon="user">Contacts</a></li>
+			    		<li><a href="#pageRecentlyDialed" data-icon="phone">Recent</a></li>
+			    		<li><a href="#pageCallLogs" data-icon="clock">Call Logs</a></li>
+			    		<!-- <li><a href="#pageSettings" data-icon="gear">Account Details</a></li>
+			    		<li><a id="logout" data-icon="power" data-icon="href="#" >Logout</a></li> -->
+			        </ul>
+			    </div><!-- /navbar -->
+	    	
+   		</div>
+   </div>
+   
+   <div data-role="page" data-dialog="true" id='pageDomainDialog'>
+       <div data-role="header" class="ui-alt-icon">
+        		<h1>Domians selection</h1>
+        	</div>
+        	<form method="post">
+        	<div data-role="main" id="domainsdilaog" class="ui-content">
+        	
+        		
+        		<div id=domainslistdiv data-role="content">
+        		<fieldset data-role="controlgroup">
+    		 	<ul id="domainnamelist" data-role="listview" data-inset="false" data-corners="false">
+    			</ul> 
+    			</fieldset>
+    		</div>
+            		
+        		
+        	</div>
+        	<div data-role="footer" align="right">
+        		 <a href="#" id="domains_ok" class="ui-btn ui-shadow ui-corner-all" style="display: block;">OK</a> 
+    			<!--  <input type="button" id="domains_ok" value="ok"  class="ui-btn ui-shadow ui-corner-all" style="min-width: inherit;">-->
+    			    			    			
+  			</div>
+  		</form>
+    		
+		</div>
+        
+        <div data-role="page" id="pageDialPad" data-title="dialpad">
+	  		<div data-role="header" data-position="fixed">
+	  		
+	        </div>
+		    
+		  <div data-role="main"  class="ui-content" >
+		    <!--<ul id="items">
+		      <li class="list">1</li>
+		      <li class="list">2</li>
+		      <li class="list">3</li>
+		      <li class="list">4</li>
+		      <li class="list">5</li>
+		      <li class="list">6</li>
+		      <li class="list">7</li>
+		      <li class="list">8</li>
+		      <li class="list">9</li>
+		      <li class="list"></li>
+		      <li class="list">0</li>
+		      <li class="list" style="font-size:20px;">Clear</li>
+		      
+		      
+		       <li class="list"><a>1</a></li>
+		      <li class="list"><a>2</a></li>
+		      <li class="list"><a>3</a></li>
+		      <li class="list"><a>4</a></li>
+		      <li class="list"><a>5</a></li>
+		      <li class="list"><a>6</a></li>
+		      <li class="list"><a>7</a></li>
+		      <li class="list"><a>8</a></li>
+		      <li class="list"><a>9</a></li>
+		      <li class="list"><a></a></li>
+		      <li class="list"><a>0</a></li>
+		      <li class="list"><a>Clear</a></li>
+		  </ul>--> 
+		  
+		  
+		  
+    	<!--  <table class="ui-bar-a" id="n_keypad">
+    		<tr>
+       			<td><a data-role="button" data-theme="b" class="numero">7</a></td>
+       			<td><a data-role="button" data-theme="b" class="numero">8</a></td>
+       			<td><a data-role="button" data-theme="b" class="numero">9</a></td>
+       			<td><a data-role="button" data-theme="e" class="del">Del</a></td>
+    		</tr>
+    		<tr>
+       			<td><a data-role="button" data-theme="b"class="numero">4</a></td>
+       			<td><a data-role="b<div data-role="main" class="ui-content" style="width: 100%; overflow-y: hidden;">
+		     
+		    <ul id="items" style="width: 100%">
+		      <li class="list">1</li>
+		      <li class="list">2</li>
+		      <li class="list">3</li>
+		      <li class="list">4</li>
+		      <li class="list">5</li>
+		      <li class="list">6</li>
+		      <li class="list">7</li>
+		      <li class="list">8</li>
+		      <li class="list">9</li>
+		      <li class="list"></li>
+		      <li class="list">0</li>
+		      <li class="list" style="font-size:20px;">Clear</li>
+		  </ul> utton" data-theme="b" class="numero">5</a></td>
+       			<td><a data-role="button" data-theme="b" class="numero">6</a></td>
+       			<td><a data-role="button" data-theme="e" class="clear">Clear</a></td>
+    		</tr>
+    		<tr>
+			       <td><a data-role="button" data-theme="b" class="numero">1</a></td>
+			       <td><a data-role="button" data-theme="b" class="numero">2</a></td>
+			       <td><a data-role="button" data-theme="b" class="numero">3</a></td>
+			       <td><a data-role="button" data-theme="e">&nbsp;</a></td>
+		    </tr>
+		    <tr>
+			   <td><a data-role="button" data-theme="e" class="neg">-</a></td>
+		       <td><a data-role="button" data-theme="b" class="zero">0</a></td>
+		       <td><a data-role="button" data-theme="e" class="pos">+</a></td>
+		       <td><a data-role="button" data-theme="e" class="done">Done</a></td>
+        	</tr>
+    		</table>   -->
+    	
+    	
+    	<!--   <div class="ui-grid-b" style="width: 100%; height: 100%; padding: 0px;">
+		    <div class="ui-block-a"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">1</div></div>
+		    <div class="ui-block-b"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">2</div></div>
+		    <div class="ui-block-c"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">3</div></div>
+		    <div class="ui-block-a"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">4</div></div>
+		    <div class="ui-block-b"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">5</div></div>
+		    <div class="ui-block-c"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">6</div></div>
+		    <div class="ui-block-a"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">7</div></div>
+		    <div class="ui-block-b"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">8</div></div>
+		    <div class="ui-block-c"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">9</div></div>
+		    <div class="ui-block-a"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">*</div></div>
+		    <div class="ui-block-b"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">0</div></div>
+		    <div class="ui-block-c"><div id="customdiv" class="ui-bar ui-bar-a" style="height:60px;">#</div></div>
+		</div>-->
+    	</div>
+	    	<div data-role="footer" data-position="fixed" data-theme="b"><!--  data-position="fixed" is add so that the panel can be scroll-->
+	    	<!--<div data-role="navbar" data-theme="e">
+	    	 <table>
+		    	<tr>
+		    	<td colspan="3">
+					<input type="number" class="ui-shadow ui-corner-all" id="numbertext" />	    	
+		    	</td>
+		    	<td>
+		    		<input type="button" class="ui-btn ui-btn-b" value="Call" id="numbercall" />
+		    	</td>
+		    	</tr>
+	    	</table>
+	    	</div> -->
+	    	
+	    	
+			<!-- <ul>
+  			  <li class="ui-block-a" style="width:80%; padding: 0px;"><input type="number" class="ui-shadow ui-corner-all" id="numbertext" /></li>
+		      <li class="ui-block-b" style="width:20%; padding: 0px;"><a type="button" class="ui-btn ui-shadow ui-corner-all" data-theme="b" data-rel="dialog"  >Send</a></li>
+		    </ul> -->
+		   
+			<input type="number" id="dialednumber" data-corners="false" readonly="readonly" style="text-align: right; font-size: x-large; background-color: silver; color: black; margin: 0px; padding-bottom: 0px;"/> 
+			<div data-role="navbar" data-grid="b" style="margin-bottom: 2px; margin-top: 0px; padding-top: 0px;" >
+  			<ul id="diallist">
+  			  <!--  <li ><a href="1" data-role="tab"  class="ui-btn" style="line-height: 40px; font-size: large; color: black;  background-color: silver; margin: 1px;">1</a></li>-->
+  			  <li ><a href="1" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">1</a></li>
+		      <li ><a href="2" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">2</a></li>
+		      <li ><a href="3" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">3</a></li>
+		      <li ><a href="4" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">4</a></li>
+		      <li ><a href="5" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">5</a></li>
+		      <li ><a href="6" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">6</a></li>
+		      <li ><a href="7" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">7</a></li>
+		      <li ><a href="8" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">8</a></li>
+		      <li ><a href="9" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large; margin: 1px;">9</a></li>
+		      <li ><a href="clear" data-role="tab" class="ui-btn" style="line-height: 40px; font-size: large;  background-color: red; margin: 1px;">Clear</a></li>
+		      <li ><a href="0" data-role="tab" data-theme="a" class="ui-btn" style="line-height: 40px; font-size: large;  margin: 1px;">0</a></li>
+		      <li ><a href="call" data-role="tab" class="ui-btn" style="line-height: 40px; font-size: large;  background-color: green; margin: 1px;">Call</a></li>
+		  </ul>
+		  
+    	</div>  
+	    	<div data-role="navbar" data-grid="c">
+	    			<ul>
+	    				<!-- <li><a href="#pageDirectCall" data-icon="grid">Dial</a></li> -->
+			        	<li><a href="#" data-icon="grid">Dial</a></li>
+			        	<li><a href="#pageContactList" data-icon="user">Contacts</a></li>
+			    		<li><a href="#pageRecentlyDialed" data-icon="phone">Recent</a></li>
+			    		<li><a href="#pageCallLogs" data-icon="clock">Call Logs</a></li>
+			    		<!-- <li><a href="#pageSettings" data-icon="gear">Account Details</a></li>
+			    		<li><a id="logout" data-icon="power" data-icon="href="#" >Logout</a></li> -->
+			        </ul>
+	    			        			      
+			   </div>
+    
+   </div>
+   		
+    	</div>
+       
+       
+		
+      
+       
+        </body>
+        </html>

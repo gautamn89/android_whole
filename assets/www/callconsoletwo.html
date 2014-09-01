@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+
+<html>
+    <head>
+        <meta charset="utf-8" />
+        <meta name="format-detection" content="telephone=no" />
+        <meta name="viewport" content="user-scalable=no, initial-scale=1, maximum-scale=1, minimum-scale=1, width=device-width, height=device-height, target-densitydpi=device-dpi" />
+       	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css">
+		<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>	
+		<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+        <script type="text/javascript" charset="utf-8" src="cordova-2.7.0.js"></script>
+        <script type="text/javascript">
+						
+        $(document).on('pagecreate', '#pageonex', function(){ 
+        	console.log("test1");
+        	alert("hello");
+        });
+        
+        $(document).on('click', '#bt_call', function(){
+        	console.log("test");
+        	var userid = localStorage.getItem("userid");
+        	var callerid = localStorage.getItem("callerid");
+			var destnum = $.trim($('#phone_num').val());
+			
+			if(userid.length > 0 || callerid.length > 0 || destnum.length > 0){
+				
+			
+        	 $.ajax({
+                 type: "GET",
+                 url: "http://mail.tsim.in/webcall.php",
+                 data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+                 cache: false,
+                 dataType: 'json',
+                 success : function(data){
+                	 
+                	 if(data.callstatus == '0')
+                		 {
+                		 	alert("call was successful");
+                		 }
+                	 else{
+                		 	alert("Call failed");
+                	 }
+                 }
+        	 	});
+			} else {
+				
+				alert("Insufficient parameters");
+			}
+        });
+			
+			
+        
+        	 
+        $(document).on('click', '#bt_retrive', function(){
+        	console.log("test2");
+        	//alert("hello2");
+        	// var opt = $("<option>");
+        	 //opt.attr("value", "test").text("hello2");
+        	 //alert("hello3");
+        	 //$("#sel_register_num").append(opt);
+        	 
+        	 
+        	 $.ajax({
+                 type: "GET",
+                 url: "http://mail.tsim.in/webcall.php",
+                 data: {action: 'registernumlist',domains : 'tsim.in',user_id : '155552831'},
+                 cache: false,
+                 dataType: 'json',
+                 success : function(data){
+                	 for (var i in data.numberlist) {
+                		 var opt = $("<option>");
+                    	 opt.attr("value", data.numberlist[i].regdnumber).text(data.numberlist[i].regdnumber);
+                    	 if(data.numberlist[i].primnumber == 't'){
+                    		 opt.attr("selected", "selected");
+                    	 
+                    		 try {
+                         	    localStorage.setItem("caller_id",data.numberlist[i].regdnumber );
+                         	    	}
+                         	catch (e) {
+                         	    if (e == QUOTA_EXCEEDED_ERR) {
+                         	        console.log("Error: Local Storage limit exceeds.");
+                         	    }
+                         	    else {
+                         	        console.log("Error: Saving to local storage.");
+                         	    }
+                         	    
+                         	}
+                    	 }
+                    		 
+                    $("#sel_register_num").append(opt);
+                	 console.log(data.numberlist[i].regdnumber);
+                	 console.log(data.numberlist[i].primnumber);
+                	 //alert(data.numberlist[i].regdnumber);
+                	
+                	 }
+                	 
+                	 var test = data.numberlist[0].regdnumber;
+                	 $("#sel_register_num").selectmenu('refresh',true);
+                	 alert(test);
+                	 
+                	 //var parseddata = $.parseJSON(data);
+                       //  alert(parseddata.numberlist);
+        	 			//$(#testid).html(parseddata.numberlist);
+        	 		
+        	 			
+        	 			//	alert(data); 
+        	 			//alert(data['numberlist']);
+        	 			//console.log("test4");
+        	 			//alert(data.numberlist);
+        	 			//console.log("test5");
+        	 			//alert(parseddata.numberlist);
+        	 			//console.log("test6");
+                 }
+        	 });
+        });
+        
+        $(document).ready(function(){
+        	
+        	var userid = localStorage.getItem("userid");
+        	
+        	if(userid != null && userid.length > 0)
+        		$("#user_id").val = userid;
+        	
+        $( "#sel_register_num" ).change(function() {
+        	
+        	alert("select event trriged");
+        	var callerid = $.trim($(this).text);
+        	
+        	localStorage.setItem("callerid", callerid);
+        	alert("callerid Local stored");
+    	    
+        	});
+        });
+    
+        </script>
+        
+        </head>
+        <body>
+      	<div data-role="page" id="pageonex">
+      	
+      	
+  			<div data-role="header">
+				<a href="#left-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-btn-icon-notext ui-icon-bullets ui-btn-inline" data-role="button" title="Settings">Settings</a>
+        		<h1>Call Console</h1>
+        		<a href="#" class="ui-btn ui-shadow ui-corner-all  ui-btn-icon-right ui-btn-icon-notext ui-icon-delete ui-btn-inline" data-role="button" title="Close">Close</a>
+        	</div>
+        	<div data-role="main" id="mainone" class="ui-content">
+        	 <form id=frm_call>
+	        	<div data-role="fieldcontain">
+            		<label for="username">User ID</label>
+            		<input type="number" name="user_id" id="user_id"  maxlength="10" value="" />
+        		</div>
+        		
+        		<div data-role="fieldcontain">
+	            		<input type="number" class="ui-shadow ui-corner-all" name="phone_num" id="phone_num" maxlength="14" value="" />
+	            		<input type="button" class="ui-btn ui-shadow ui-corner-all  ui-icon-phone" name="bt_call" id="bt_call" value="Call"/>
+	            		<input type="button" class="ui-btn ui-shadow ui-corner-all  ui-icon-phone" name="bt_retrive" id="bt_retrive" value="Retrive"/>
+	        	</div>
+	        	<div data-role="fieldcontain">
+	        			<label for="Callstaus">Call Status</label>
+	        			<label for="Call_status" id="Call_status" ></label>
+	        	</div>
+	      <!--   -->
+	        	<div data-role="fieldcontain">
+	        		<label for="registernumber">Current Register Number</label>
+	        		<select class="ui-shadow ui-corner-all" id="sel_register_num" name="sel_register_num" data-placeholder="true">
+      				<option>hello</option>
+	        		</select>	
+	        	</div>
+	        	</form>
+			</div>
+			<div data-role="footer" id="testid">
+    			<h6>www.Xyx.com</h6>
+  			</div>
+  		</div>
+  		</body>
+  		</html>	

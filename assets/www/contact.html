@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Contact Example</title>
+
+    
+  <!--<script src="http://code.jquery.com/jquery-1.10.2.min.js"></script>
+	<script src="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.js"></script>
+	<link rel="stylesheet" href="http://code.jquery.com/mobile/1.4.2/jquery.mobile-1.4.2.min.css">--->
+	 <link rel="stylesheet" href="css/jquery.mobile-1.4.3.min.css">
+	  <script src="js/jquery.js"></script> 
+		 <script src="js/index.js"></script>
+		<script src="js/jquery.mobile-1.4.3.js"></script> 
+	<script type="text/javascript" charset="utf-8" src="cordova.js"></script>
+    <script type="text/javascript" charset="utf-8">
+    
+    // Wait for Cordova to load
+    // 
+    $(document).ready(function(){
+    	alert('onDevice ready');
+    	document.addEventListener("deviceready", onDeviceReady, false);
+   
+
+   
+    
+   
+    
+    function onBackKeyDown() {
+    	alert("Back button pressed");
+    	//navigator.app.pause;
+    	//navigator.app.exitApp(); 
+    	
+    	//navigator.Backbutton.goHome(function() {
+         //   console.log('success')
+        //}, function() {
+         //   console.log('fail')
+        //});
+    	
+    	
+    	
+    }
+    // Cordova is ready
+    
+    function onDeviceReady() {
+        // specify contact search criteria
+        alert('onDevice ready1');
+        var options = new ContactFindOptions();
+        options.filter="";          // empty search string returns all contacts
+        options.multiple=true;      // return multiple results
+        var filter = ["displayName" , "name" , "phoneNumbers"];   // return contact.displayName field
+
+        // below line is use to find contacts
+        navigator.contacts.find(filter, onContactSuccess, onContactError, options);
+        
+        document.addEventListener("backbutton", onBackKeyDown, false);
+    }
+
+    // onSuccess: Get a snapshot of the current contacts
+    //
+    function onContactSuccess(contacts) {
+    	
+    	
+    	 for (var i=0; i<=contacts.length; i++) {
+          	
+          	//alert("Display name" + contacts[i].displayName);
+          	if(contacts[i].phoneNumbers != null)
+				{            	
+	              	var li = $("<li>");
+	            	var licls = $("</li>");
+	            	var a = $("<a>");
+	            	var acls = $("</a>");
+	            	a.attr("id", contacts[i].phoneNumbers[0].value).text(contacts[i].displayName);
+	            	a.attr("href", contacts[i].phoneNumbers[0].value);
+	            	$("#contactlist").append(li)
+	            	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+	            	li.append(acls);
+	            	$("#contactlist").append(licls); //this didnt work
+	            	$("#contactlist").listview('refresh');
+				}
+         	 
+            }
+    	
+    	
+    	
+    };
+
+    // onError: Failed to get the contacts
+    //
+    function onContactError(contactError) {
+        alert('onError!');
+    }
+    
+    
+    $("#right-setting-panel").on("click", 'a' , function(event){
+    	
+    	alert("Panel click");
+    	event.preventDefault();
+    	var settingpage = $(this).attr('href');
+    	alert("Page clicked " + settingpage);
+    	$.mobile.changePage("#pageonex");
+    	//window.location.href = "index.html#pageonex";
+    	
+    }); 
+    
+    
+    $("#contactlistdiv").on("click", 'a' , function(event){
+   	 	alert("Contact Selected");
+   	 	event.preventDefault(); //this is compulsory for listening dynamically created elements
+   		//var hrefvalue  = $(this).href; this is not working
+   		var userid = "155552831";
+   		var callerid = "919594787931";
+   		var destnum = $(this).attr('href');
+   	   	alert("contact to call " + destnum);
+   	
+	   	if(userid.length > 0 || callerid.length > 0 || destnum.length > 0){
+				
+	   	 $.ajax({
+	            type: "GET",
+	            url: "http://mail.tsim.in/webcall.php",
+	            data: {action: 'call',domains: 'tsim.in',user_id: userid,caller_id: callerid,dest_num: destnum},
+	            cache: false,
+	            dataType: 'json',
+	            success : function(data){
+	           	 
+	           	 if(data.callstatus[0] == '0')
+	           		 {
+	           		 	alert("call was successful");
+	           		 }
+	           	 else{
+	           		 alert(data.callstatus[0]);	
+	           		 alert("Call failed");
+	               	 }
+	            }
+	   	 	});
+		} else {
+				alert("Insufficient parameters");
+			}
+	   	   	 //console.log($('a').index());
+	   		return false;
+	   	//console.log($(this).href);
+	   	 });
+    });
+    
+   // a_menu
+    
+    
+    
+    $(document).on('click', '#a_retrive', function(){
+	    	 alert("RTetive button is clicked");
+	         var options = new ContactFindOptions();
+	         options.filter="";          // empty search string returns all contacts
+	         options.multiple=true;      // return multiple results
+	         var filter = ["displayName" ,"name" ,"phoneNumbers"];   // return contact.displayName field
+	
+	         // find contacts
+	         navigator.contacts.find(filter, onContactSuccess, onContactError, options);
+        
+         
+		        function onSuccess(contacts) {
+		        	 
+		             for (var i=0; i<=contacts.length; i++) {
+		             	
+		             	//alert("Display name" + contacts[i].displayName);
+		             	if(contacts[i].phoneNumbers != null)
+						{            	
+			              	var li = $("<li>");
+			            	var licls = $("</li>");
+			            	var a = $("<a>");
+			            	var acls = $("</a>");
+			            	a.attr("id", contacts[i].phoneNumbers[0].value).text(contacts[i].displayName);
+			            	a.attr("href", contacts[i].phoneNumbers[0].value);
+			            	$("#contactlist").append(li)
+			            	li.append(a); //apended to li becos we wnad anchor tag inside tthe list
+			            	li.append(acls);
+			            	$("#contactlist").append(licls); //this didnt work
+			            	$("#contactlist").listview('refresh');
+						}
+		            	 
+		               }
+		           
+		         };
+
+         // onError: Failed to get the contacts
+         //
+         function onError(contactError) {
+             alert('onError in loading contact list');
+         }
+         
+     });
+    </script>
+  </head>
+  <body>
+  <div data-role="page" id="pageone">
+  	<div data-role="header" data-position="fixed">
+  	<a id="a_retrive" href="#"  class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-btn-icon-notext ui-icon-refresh" data-role="button"  title="Refresh">Refresh</a>
+    <h1>Contacts</h1>
+    <a id="a_menu" href="#right-setting-panel" class="ui-btn ui-shadow ui-corner-all ui-icon-bars ui-icon-arrow-l ui-btn-icon-notext" data-role="button"  title="Back">Menu</a>
+    </div>
+    <div data-role="main" id="mainone" class="ui-content">
+    <div id=contactlistdiv>
+    <ul id="contactlist" data-role="listview" data-filter="true"  data-filter-placeholder="Search Contact..." data-inset="true">
+    </ul>
+    </div>
+    <div data-role="panel" id="right-setting-panel" data-position="right" data-display="overlay" data-position-fixed="true" >
+    		<h2>Settings</h2>
+    		<ul id="menulist" data-role="listview"  data-theme="b" >
+    		<li><a href="#pageonex">Set Register Number</a></li>
+    		<li><a href="directcall">Direct call</a></li>
+    		<li><a href="accountdetails">Account Details</a></li>
+    		<li><a href="logout">Logout</a></li>
+    </ul>
+    </div>
+    </div>
+   <div data-role="footer" data-position="fixed" > <!-- data-position="fixed" is add so that the panel can be scroll -->
+	    <div data-role="fieldcontain">
+	   	<!--  <input type="button" class="ui-btn ui-shadow ui-corner-all  ui-icon-phone" name="bt_retrive" id="bt_retrive" value="Retrive Contacts"/>-->
+	   	</div>
+   </div>
+   </div> <!-- page one close -->
+   
+    <div data-role="page" id="pageonex">
+   
+  			<div data-role="header">
+				<a href="#left-panel" class="ui-btn ui-shadow ui-corner-all ui-btn-icon-left ui-btn-icon-notext ui-icon-bullets ui-btn-inline" data-role="button" title="Settings">Settings</a>
+        		<h1>Call Console</h1>
+        		<a href="#" class="ui-btn ui-shadow ui-corner-all  ui-btn-icon-right ui-btn-icon-notext ui-icon-delete ui-btn-inline" data-role="button" title="Close">Close</a>
+        	</div>
+        	<div data-role="main" id="mainone" class="ui-content">
+        	 <form id=frm_call>
+	        	<div data-role="fieldcontain">
+            		<label for="username">User ID</label>
+            		<input type="number" name="user_id" id="user_id"  maxlength="10" />
+        		</div>
+        		
+        		<div data-role="fieldcontain">
+	            		<input type="number" class="ui-shadow ui-corner-all" name="phone_num" id="phone_num" maxlength="14" value="" />
+	            		<input type="button" class="ui-btn ui-shadow ui-corner-all  ui-icon-phone" name="bt_call" id="bt_call" value="Call"/>
+	            		<input type="button" class="ui-btn ui-shadow ui-corner-all  ui-icon-phone" name="bt_retrive" id="bt_retrive" value="Retrive"/>
+	        	</div>
+	        	<div data-role="fieldcontain">
+	        			<label for="Callstaus">Call Status</label>
+	        			<label for="Call_status" id="Call_status" ></label>
+	        	</div>
+	      <!--   -->
+	        	<div data-role="fieldcontain">
+	        		<label for="registernumber">Current Register Number</label>
+	        		<select class="ui-shadow ui-corner-all" id="sel_register_num" name="sel_register_num" data-placeholder="true">
+      				
+	        		</select>	
+	        	</div>
+	        	</form>
+			</div>
+			<div data-role="footer" id="testid">
+    			<h6>www.webcall.com</h6>
+  			</div>
+  		</div>
+   
+   <li ><a class="list">1</a></li>
+		      <li ><a class="list">2</a></li>
+		      <li ><a class="list">3</a></li>
+		      <li ><a class="list">4</a></li>
+		      <li ><a class="list">5</a></li>
+		      <li ><a class="list">6</a></li>
+		      <li ><a class="list">7</a></li>
+		      <li ><a class="list">8</a></li>
+		      <li ><a class="list">9</a></li>
+		      <li ><a class="list"></a></li>
+		      <li ><a class="list">0</a></li>
+		      <li ><a class="list">Clear</a></li>
+   
+   <table data-role="table">
+		    	<tr>
+		    	<td colspan="3">
+					<input type="number" class="ui-shadow ui-corner-all" id="numbertext" />	    	
+		    	</td>
+		    	<td>
+		    		<input type="button" class="ui-btn ui-btn-b" value="Call" id="numbercall" />
+		    	</td>
+		    	</tr>
+	    	</table>
+	    	
+	    	
+   
+    	
+  </body>
+</html>
